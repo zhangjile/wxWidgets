@@ -322,7 +322,11 @@ wxLongLong wxGetUTCTimeMillis()
 
 wxLongLong wxGetLocalTimeMillis()
 {
-    return wxGetUTCTimeMillis() - wxGetTimeZone()*MILLISECONDS_PER_SECOND;
+    static int ntz = -9999;
+    if(ntz == -9999) {
+        ntz = wxGetTimeZone();
+    }
+    return wxGetUTCTimeMillis() - (ntz * MILLISECONDS_PER_SECOND);
 }
 
 #else // !wxUSE_LONGLONG
