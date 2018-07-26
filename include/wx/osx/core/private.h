@@ -198,7 +198,7 @@ public :
 protected :
     wxMenu* m_peer;
 
-    wxDECLARE_ABSTRACT_CLASS(wxMenuItemImpl);
+    wxDECLARE_ABSTRACT_CLASS(wxMenuImpl);
 } ;
 #endif
 
@@ -325,6 +325,8 @@ public :
     virtual bool        ButtonClickDidStateChange() = 0;
 
     virtual void        InstallEventHandler( WXWidget control = NULL ) = 0;
+
+    virtual bool        EnableTouchEvents(int eventsMask) = 0;
 
     // Mechanism used to keep track of whether a change should send an event
     // Do SendEvents(false) when starting actions that would trigger programmatic events

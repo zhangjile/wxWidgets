@@ -676,10 +676,8 @@ MyFrame::MyFrame(const wxString& title)
     m_infoBarAdvanced->AddButton(wxID_UNDO);
     m_infoBarAdvanced->AddButton(wxID_REDO);
 
-    m_infoBarAdvanced->Connect(wxID_REDO, wxEVT_BUTTON,
-                                wxCommandEventHandler(MyFrame::OnInfoBarRedo),
-                                NULL,
-                                this);
+    m_infoBarAdvanced->Bind(wxEVT_BUTTON, &MyFrame::OnInfoBarRedo, this,
+                            wxID_REDO);
 
     // adding and removing a button immediately doesn't make sense here, of
     // course, it's done just to show that it is possible
@@ -688,6 +686,7 @@ MyFrame::MyFrame(const wxString& title)
 
     // ... changing the colours and/or fonts
     m_infoBarAdvanced->SetOwnBackgroundColour(0xc8ffff);
+    m_infoBarAdvanced->SetForegroundColour(0x123312);
     m_infoBarAdvanced->SetFont(GetFont().Bold().Larger());
 
     // ... and changing the effect (only does anything under MSW currently)
@@ -723,8 +722,8 @@ MyFrame::MyFrame(const wxString& title)
         static const int DIALOGS_SYSTEM_ABOUT = 0x4010;
 
         menu->Append(DIALOGS_SYSTEM_ABOUT, "&About");
-        Connect(DIALOGS_SYSTEM_ABOUT, wxEVT_MENU,
-                wxCommandEventHandler(MyFrame::ShowSimpleAboutDialog));
+        Bind(wxEVT_MENU, &MyFrame::ShowSimpleAboutDialog, this,
+             DIALOGS_SYSTEM_ABOUT);
     }
 #endif // __WXMSW__
 }
@@ -966,7 +965,8 @@ void MyFrame::MessageBoxWindowModal(wxCommandEvent& WXUNUSED(event))
                  "so the default \"Yes\"/\"No\"/\"Cancel\" buttons are used.";
     }
     dialog->SetExtendedMessage(extmsg);
-    dialog->Connect( wxEVT_WINDOW_MODAL_DIALOG_CLOSED, wxWindowModalDialogEventHandler(MyFrame::MessageBoxWindowModalClosed), NULL, this );
+    dialog->Bind(wxEVT_WINDOW_MODAL_DIALOG_CLOSED,
+                 &MyFrame::MessageBoxWindowModalClosed, this);
     dialog->ShowWindowModal();
 }
 
@@ -1513,12 +1513,9 @@ MyExtraPanel::MyExtraPanel(wxWindow *parent)
     m_btn = new wxButton(this, -1, wxT("Custom Button"));
     m_btn->Enable(false);
     m_cb = new wxCheckBox(this, -1, wxT("Enable Custom Button"));
-    m_cb->Connect(wxEVT_CHECKBOX,
-                  wxCommandEventHandler(MyExtraPanel::OnCheckBox), NULL, this);
+    m_cb->Bind(wxEVT_CHECKBOX, &MyExtraPanel::OnCheckBox, this);
     m_label = new wxStaticText(this, wxID_ANY, "Nothing selected");
-    m_label->Connect(wxEVT_UPDATE_UI,
-                     wxUpdateUIEventHandler(MyExtraPanel::OnUpdateLabelUI),
-                     NULL, this);
+    m_label->Bind(wxEVT_UPDATE_UI, &MyExtraPanel::OnUpdateLabelUI, this);
 
     m_text = new wxTextCtrl(this, -1, m_str,
                             wxDefaultPosition, wxSize(40*GetCharWidth(), -1));
@@ -2416,21 +2413,8 @@ public:
 
 
         // And connect the event handlers.
-        btnShowText->Connect
-                     (
-                        wxEVT_BUTTON,
-                        wxCommandEventHandler(RichTipDialog::OnShowTipForText),
-                        NULL,
-                        this
-                     );
-
-        btnShowBtn->Connect
-                    (
-                        wxEVT_BUTTON,
-                        wxCommandEventHandler(RichTipDialog::OnShowTipForBtn),
-                        NULL,
-                        this
-                    );
+        btnShowText->Bind(wxEVT_BUTTON, &RichTipDialog::OnShowTipForText, this);
+        btnShowBtn->Bind(wxEVT_BUTTON, &RichTipDialog::OnShowTipForBtn, this);
     }
 
 private:
@@ -3624,11 +3608,8 @@ bool TestMessageBoxDialog::Create()
         m_labels[n] = new wxTextCtrl(this, wxID_ANY);
         sizerBtns->Add(m_labels[n], wxSizerFlags().Expand());
 
-        m_labels[n]->Connect(wxEVT_UPDATE_UI,
-                             wxUpdateUIEventHandler(
-                                 TestMessageBoxDialog::OnUpdateLabelUI),
-                             NULL,
-                             this);
+        m_labels[n]->Bind(wxEVT_UPDATE_UI,
+                          &TestMessageBoxDialog::OnUpdateLabelUI, this);
     }
 
     sizerBtnsBox->Add(sizerBtns, wxSizerFlags().Expand());
@@ -3663,11 +3644,8 @@ bool TestMessageBoxDialog::Create()
         sizerFlags = new wxStaticBoxSizer(wxHORIZONTAL, this, "&Other flags");
 
     m_chkNoDefault = new wxCheckBox(this, wxID_ANY, "Make \"No\" &default");
-    m_chkNoDefault->Connect(wxEVT_UPDATE_UI,
-                            wxUpdateUIEventHandler(
-                                TestMessageBoxDialog::OnUpdateNoDefaultUI),
-                            NULL,
-                            this);
+    m_chkNoDefault->Bind(wxEVT_UPDATE_UI,
+                         &TestMessageBoxDialog::OnUpdateNoDefaultUI, this);
     sizerFlags->Add(m_chkNoDefault, wxSizerFlags().Border());
 
     m_chkCentre = new wxCheckBox(this, wxID_ANY, "Centre on &parent");
@@ -3892,6 +3870,34 @@ void TestRichMessageDialog::AddAdditionalTextOptions(wxSizer *sizer)
                                     wxTE_MULTILINE);
     sizerMsgs->Add(m_textDetailed, wxSizerFlags().Expand());
 
+    // add option to show footer text
+    wxSizer * const sizerFooter = new wxBoxSizer(wxHORIZONTAL);
+    sizerFooter->Add(new wxStaticText(this, wxID_ANY, "&Footer Text:"),
+        wxSizerFlags().Centre().Border(wxRIGHT));
+    m_textFooter = new wxTextCtrl(this, wxID_ANY);
+    sizerFooter->Add(m_textFooter, wxSizerFlags(1).Centre());
+
+    // add option to select footer icon
+    const wxString icons[] =
+    {
+        "None",
+        "Info",
+        "Warning",
+        "Error",
+        "Auth needed"
+    };
+
+    sizerFooter->Add(new wxStaticText(this, wxID_ANY, "Icon:"),
+        wxSizerFlags().Centre().Border(wxLEFT));
+    m_iconsFooter = new wxChoice(this, wxID_ANY,
+        wxDefaultPosition, wxDefaultSize,
+        WXSIZEOF(icons), icons);
+    // Make the None the default:
+    m_iconsFooter->SetSelection(0);
+    sizerFooter->Add(m_iconsFooter, wxSizerFlags().Expand().Border());
+
+    sizerMsgs->Add(sizerFooter, wxSizerFlags().Expand().Border(wxTOP));
+
     sizer->Add(sizerMsgs, wxSizerFlags().Expand().Border());
 }
 
@@ -3912,6 +3918,25 @@ void TestRichMessageDialog::OnApply(wxCommandEvent& WXUNUSED(event))
     dlg.ShowCheckBox(m_textCheckBox->GetValue(),
                      m_initialValueCheckBox->GetValue());
     dlg.ShowDetailedText(m_textDetailed->GetValue());
+    dlg.SetFooterText(m_textFooter->GetValue());
+    switch ( m_iconsFooter->GetSelection() )
+    {
+        case 1:
+            dlg.SetFooterIcon(wxICON_INFORMATION);
+            break;
+
+        case 2:
+            dlg.SetFooterIcon(wxICON_WARNING);
+            break;
+
+        case 3:
+            dlg.SetFooterIcon(wxICON_ERROR);
+            break;
+
+        case 4:
+            dlg.SetFooterIcon(wxICON_AUTH_NEEDED);
+            break;
+    }
 
     ShowResult(dlg.ShowModal());
 }

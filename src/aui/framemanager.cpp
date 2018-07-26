@@ -222,8 +222,7 @@ wxEND_EVENT_TABLE()
 #else
   // __WXGTK20__
 
-#include <gtk/gtk.h>
-#include "wx/gtk/private/gtk2-compat.h"
+#include "wx/gtk/private/wrapgtk.h"
 
 static void
 gtk_pseudo_window_realized_callback( GtkWidget *m_widget, void *WXUNUSED(win) )
@@ -859,8 +858,7 @@ void wxAuiManager::UpdateHintWindowConfig()
                                          wxDefaultPosition, wxSize(1,1),
                                          wxFRAME_FLOAT_ON_PARENT
                                          | wxFRAME_TOOL_WINDOW );
-            m_hintWnd->Connect(wxEVT_ACTIVATE,
-                wxActivateEventHandler(wxAuiManager::OnHintActivate), NULL, this);
+            m_hintWnd->Bind(wxEVT_ACTIVATE, &wxAuiManager::OnHintActivate, this);
 
             // Can't set the bg colour of a Frame in wxMac
             wxPanel* p = new wxPanel(m_hintWnd);
@@ -3285,8 +3283,8 @@ void wxAuiManager::OnHintFadeTimer(wxTimerEvent& WXUNUSED(event))
     if (!m_hintWnd || m_hintFadeAmt >= m_hintFadeMax)
     {
         m_hintFadeTimer.Stop();
-        Disconnect(m_hintFadeTimer.GetId(), wxEVT_TIMER,
-                   wxTimerEventHandler(wxAuiManager::OnHintFadeTimer));
+        Unbind(wxEVT_TIMER, &wxAuiManager::OnHintFadeTimer, this,
+               m_hintFadeTimer.GetId());
         return;
     }
 
@@ -3330,8 +3328,8 @@ void wxAuiManager::ShowHint(const wxRect& rect)
             // start fade in timer
             m_hintFadeTimer.SetOwner(this);
             m_hintFadeTimer.Start(5);
-            Connect(m_hintFadeTimer.GetId(), wxEVT_TIMER,
-                    wxTimerEventHandler(wxAuiManager::OnHintFadeTimer));
+            Bind(wxEVT_TIMER, &wxAuiManager::OnHintFadeTimer, this,
+                 m_hintFadeTimer.GetId());
         }
     }
     else  // Not using a transparent hint window...
@@ -3402,8 +3400,8 @@ void wxAuiManager::HideHint()
         m_hintFadeTimer.Stop();
         // In case this is called while a hint fade is going, we need to
         // disconnect the event handler.
-        Disconnect(m_hintFadeTimer.GetId(), wxEVT_TIMER,
-                   wxTimerEventHandler(wxAuiManager::OnHintFadeTimer));
+        Unbind(wxEVT_TIMER, &wxAuiManager::OnHintFadeTimer, this,
+               m_hintFadeTimer.GetId());
         m_lastHint = wxRect();
         return;
     }
@@ -3937,6 +3935,10 @@ void wxAuiManager::Repaint(wxDC* dc)
 void wxAuiManager::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
     wxPaintDC dc(m_frame);
+
+    dc.SetBackground(GetArtProvider()->GetColor(wxAUI_DOCKART_BACKGROUND_COLOUR));
+    dc.Clear();
+
     Repaint(&dc);
 }
 

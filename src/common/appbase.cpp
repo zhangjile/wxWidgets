@@ -173,7 +173,7 @@ wxAppConsoleBase::wxAppConsoleBase()
     m_mainLoop = NULL;
     m_bDoPendingEventProcessing = true;
 
-    ms_appInstance = static_cast<wxAppConsole *>(this);
+    ms_appInstance = reinterpret_cast<wxAppConsole *>(this);
 
 #ifdef __WXDEBUG__
     SetTraceMasks();
@@ -302,7 +302,7 @@ int wxAppConsoleBase::OnRun()
 }
 
 void wxAppConsoleBase::OnLaunched()
-{    
+{
 }
 
 int wxAppConsoleBase::OnExit()
@@ -376,7 +376,7 @@ int wxAppConsoleBase::MainLoop()
 
     if (wxTheApp)
         wxTheApp->OnLaunched();
-    
+
     return m_mainLoop ? m_mainLoop->Run() : -1;
 }
 

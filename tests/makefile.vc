@@ -97,6 +97,7 @@ TEST_OBJECTS =  \
 	$(OBJS)\test_filestream.obj \
 	$(OBJS)\test_iostreams.obj \
 	$(OBJS)\test_largefile.obj \
+	$(OBJS)\test_lzmastream.obj \
 	$(OBJS)\test_memstream.obj \
 	$(OBJS)\test_socketstream.obj \
 	$(OBJS)\test_sstream.obj \
@@ -174,6 +175,7 @@ TEST_GUI_OBJECTS =  \
 	$(OBJS)\test_gui_boundingbox.obj \
 	$(OBJS)\test_gui_clippingbox.obj \
 	$(OBJS)\test_gui_graphmatrix.obj \
+	$(OBJS)\test_gui_graphpath.obj \
 	$(OBJS)\test_gui_config.obj \
 	$(OBJS)\test_gui_bitmapcomboboxtest.obj \
 	$(OBJS)\test_gui_bitmaptogglebuttontest.obj \
@@ -234,6 +236,7 @@ TEST_GUI_OBJECTS =  \
 	$(OBJS)\test_gui_rawbmp.obj \
 	$(OBJS)\test_gui_htmlparser.obj \
 	$(OBJS)\test_gui_htmlwindow.obj \
+	$(OBJS)\test_gui_htmprint.obj \
 	$(OBJS)\test_gui_accelentry.obj \
 	$(OBJS)\test_gui_menu.obj \
 	$(OBJS)\test_gui_guifuncs.obj \
@@ -242,6 +245,8 @@ TEST_GUI_OBJECTS =  \
 	$(OBJS)\test_gui_safearrayconverttest.obj \
 	$(OBJS)\test_gui_settings.obj \
 	$(OBJS)\test_gui_socket.obj \
+	$(OBJS)\test_gui_tlw.obj \
+	$(OBJS)\test_gui_dataview.obj \
 	$(OBJS)\test_gui_boxsizer.obj \
 	$(OBJS)\test_gui_gridsizer.obj \
 	$(OBJS)\test_gui_wrapsizer.obj \
@@ -911,6 +916,9 @@ $(OBJS)\test_iostreams.obj: .\streams\iostreams.cpp
 $(OBJS)\test_largefile.obj: .\streams\largefile.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_CXXFLAGS) .\streams\largefile.cpp
 
+$(OBJS)\test_lzmastream.obj: .\streams\lzmastream.cpp
+	$(CXX) /c /nologo /TP /Fo$@ $(TEST_CXXFLAGS) .\streams\lzmastream.cpp
+
 $(OBJS)\test_memstream.obj: .\streams\memstream.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_CXXFLAGS) .\streams\memstream.cpp
 
@@ -1042,6 +1050,9 @@ $(OBJS)\test_gui_clippingbox.obj: .\graphics\clippingbox.cpp
 
 $(OBJS)\test_gui_graphmatrix.obj: .\graphics\graphmatrix.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\graphics\graphmatrix.cpp
+
+$(OBJS)\test_gui_graphpath.obj: .\graphics\graphpath.cpp
+	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\graphics\graphpath.cpp
 
 $(OBJS)\test_gui_config.obj: .\config\config.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\config\config.cpp
@@ -1223,6 +1234,9 @@ $(OBJS)\test_gui_htmlparser.obj: .\html\htmlparser.cpp
 $(OBJS)\test_gui_htmlwindow.obj: .\html\htmlwindow.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\html\htmlwindow.cpp
 
+$(OBJS)\test_gui_htmprint.obj: .\html\htmprint.cpp
+	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\html\htmprint.cpp
+
 $(OBJS)\test_gui_accelentry.obj: .\menu\accelentry.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\menu\accelentry.cpp
 
@@ -1246,6 +1260,12 @@ $(OBJS)\test_gui_settings.obj: .\misc\settings.cpp
 
 $(OBJS)\test_gui_socket.obj: .\net\socket.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\net\socket.cpp
+
+$(OBJS)\test_gui_tlw.obj: .\persistence\tlw.cpp
+	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\persistence\tlw.cpp
+
+$(OBJS)\test_gui_dataview.obj: .\persistence\dataview.cpp
+	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\persistence\dataview.cpp
 
 $(OBJS)\test_gui_boxsizer.obj: .\sizers\boxsizer.cpp
 	$(CXX) /c /nologo /TP /Fo$@ $(TEST_GUI_CXXFLAGS) .\sizers\boxsizer.cpp

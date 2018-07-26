@@ -20,9 +20,7 @@
     #include "wx/arrstr.h"
 #endif
 
-#include <gtk/gtk.h>
 #include "wx/gtk/private.h"
-#include "wx/gtk/private/gtk2-compat.h"
 
 // ----------------------------------------------------------------------------
 // GTK callbacks
@@ -99,7 +97,10 @@ wxEND_EVENT_TABLE()
 wxComboBox::~wxComboBox()
 {
     if (m_entry)
+    {
         GTKDisconnect(m_entry);
+        g_object_remove_weak_pointer(G_OBJECT(m_entry), (void**)&m_entry);
+    }
 }
 
 void wxComboBox::Init()
@@ -213,6 +214,7 @@ void wxComboBox::GTKCreateComboBoxWidget()
     g_object_ref(m_widget);
 
     m_entry = GTK_ENTRY(gtk_bin_get_child(GTK_BIN(m_widget)));
+    g_object_add_weak_pointer(G_OBJECT(m_entry), (void**)&m_entry);
 }
 
 GtkEditable *wxComboBox::GetEditable() const

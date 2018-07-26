@@ -911,6 +911,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\persistence\dataview.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\controls\dataviewctrltest.cpp"
 				>
 			</File>
@@ -1023,6 +1027,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\graphics\graphpath.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sizers\gridsizer.cpp"
 				>
 			</File>
@@ -1048,6 +1056,10 @@
 			</File>
 			<File
 				RelativePath=".\html\htmlwindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\html\htmprint.cpp"
 				>
 			</File>
 			<File
@@ -1212,6 +1224,10 @@
 			</File>
 			<File
 				RelativePath=".\controls\textentrytest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\persistence\tlw.cpp"
 				>
 			</File>
 			<File

@@ -27,6 +27,7 @@
 #include "wx/dataobj.h"
 #include "wx/withimages.h"
 #include "wx/systhemectrl.h"
+#include "wx/vector.h"
 
 class WXDLLIMPEXP_FWD_CORE wxImageList;
 class wxItemAttr;
@@ -179,8 +180,7 @@ private:
 // wxDataViewModel
 // ---------------------------------------------------------
 
-WX_DECLARE_LIST_WITH_DECL(wxDataViewModelNotifier, wxDataViewModelNotifiers,
-                          class WXDLLIMPEXP_ADV);
+typedef wxVector<wxDataViewModelNotifier*> wxDataViewModelNotifiers;
 
 class WXDLLIMPEXP_ADV wxDataViewModel: public wxRefCounter
 {
@@ -273,8 +273,9 @@ public:
     virtual bool IsVirtualListModel() const { return false; }
 
 protected:
-    // the user should not delete this class directly: he should use DecRef() instead!
-    virtual ~wxDataViewModel() { }
+    // Dtor is protected because the objects of this class must not be deleted,
+    // DecRef() must be used instead.
+    virtual ~wxDataViewModel();
 
     // Helper function used by the default Compare() implementation to compare
     // values of types it is not aware about. Can be overridden in the derived
@@ -285,7 +286,7 @@ protected:
         return 0;
     }
 
-
+private:
     wxDataViewModelNotifiers  m_notifiers;
 };
 
@@ -754,6 +755,12 @@ public:
     virtual bool SetHeaderAttr(const wxItemAttr& WXUNUSED(attr))
         { return false; }
 
+    // Set the colour used for the "alternate" rows when wxDV_ROW_LINES is on.
+    // Also only supported in the generic version, which returns true to
+    // indicate it.
+    virtual bool SetAlternateRowColour(const wxColour& WXUNUSED(colour))
+        { return false; }
+
     virtual wxVisualAttributes GetDefaultAttributes() const wxOVERRIDE
     {
         return GetClassDefaultAttributes(GetWindowVariant());
@@ -839,7 +846,8 @@ public:
         m_dataBuffer(event.m_dataBuffer),
         m_dataSize(event.m_dataSize),
         m_dragFlags(event.m_dragFlags),
-        m_dropEffect(event.m_dropEffect)
+        m_dropEffect(event.m_dropEffect),
+        m_proposedDropIndex(event.m_proposedDropIndex)
 #endif
         { }
 
@@ -852,7 +860,6 @@ public:
 
     // for wxEVT_DATAVIEW_ITEM_EDITING_DONE only
     bool IsEditCancelled() const { return m_editCancelled; }
-    void SetEditCanceled(bool editCancelled) { m_editCancelled = editCancelled; }
 
     // for wxEVT_DATAVIEW_COLUMN_HEADER_CLICKED only
     wxDataViewColumn *GetDataViewColumn() const { return m_column; }
@@ -883,6 +890,10 @@ public:
     int GetDragFlags() const { return m_dragFlags; }
     void SetDropEffect( wxDragResult effect ) { m_dropEffect = effect; }
     wxDragResult GetDropEffect() const { return m_dropEffect; }
+    // for plaforms (currently only OSX) that support Drag/Drop insertion of items,
+	// this is the proposed child index for the insertion
+	void SetProposedDropIndex(int index) { m_proposedDropIndex = index; }
+	int GetProposedDropIndex() const { return m_proposedDropIndex;}
 #endif // wxUSE_DRAG_AND_DROP
 
     virtual wxEvent *Clone() const wxOVERRIDE { return new wxDataViewEvent(*this); }
@@ -896,10 +907,11 @@ public:
     wxDEPRECATED_MSG("Pass the argument to the ctor instead")
     void SetDataViewColumn( wxDataViewColumn *col ) { m_column = col; }
     wxDEPRECATED_MSG("Pass the argument to the ctor instead")
-    void SetColumn( int col ) { m_col = col; }
-    wxDEPRECATED_MSG("Pass the argument to the ctor instead")
     void SetItem( const wxDataViewItem &item ) { m_item = item; }
 #endif // WXWIN_COMPATIBILITY_3_0
+
+    void SetColumn( int col ) { m_col = col; }
+    void SetEditCancelled() { m_editCancelled = true; }
 
 protected:
     wxDataViewItem      m_item;
@@ -921,6 +933,7 @@ protected:
 
     int                 m_dragFlags;
     wxDragResult        m_dropEffect;
+    int                 m_proposedDropIndex;
 #endif // wxUSE_DRAG_AND_DROP
 
 private:
@@ -1211,8 +1224,7 @@ private:
     wxClientData             *m_data;
 };
 
-WX_DECLARE_LIST_WITH_DECL(wxDataViewTreeStoreNode, wxDataViewTreeStoreNodeList,
-                          class WXDLLIMPEXP_ADV);
+typedef wxVector<wxDataViewTreeStoreNode*> wxDataViewTreeStoreNodes;
 
 class WXDLLIMPEXP_ADV wxDataViewTreeStoreContainerNode: public wxDataViewTreeStoreNode
 {
@@ -1222,10 +1234,12 @@ public:
         wxClientData *data = NULL );
     virtual ~wxDataViewTreeStoreContainerNode();
 
-    const wxDataViewTreeStoreNodeList &GetChildren() const
+    const wxDataViewTreeStoreNodes &GetChildren() const
         { return m_children; }
-    wxDataViewTreeStoreNodeList &GetChildren()
+    wxDataViewTreeStoreNodes &GetChildren()
         { return m_children; }
+
+    wxDataViewTreeStoreNodes::iterator FindChild(wxDataViewTreeStoreNode* node);
 
     void SetExpandedIcon( const wxIcon &icon )
         { m_iconExpanded = icon; }
@@ -1240,8 +1254,10 @@ public:
     virtual bool IsContainer() wxOVERRIDE
         { return true; }
 
+    void DestroyChildren();
+
 private:
-    wxDataViewTreeStoreNodeList  m_children;
+    wxDataViewTreeStoreNodes     m_children;
     wxIcon                       m_iconExpanded;
     bool                         m_isExpanded;
 };

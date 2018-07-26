@@ -562,5 +562,51 @@ void  wxMacCocoaShowCursor()
     [NSCursor unhide];
 }
 
+//---------------------------------------------------------
+// helper functions for NSString<->wxString conversion
+//---------------------------------------------------------
+
+wxString wxStringWithNSString(NSString *nsstring)
+{
+#if wxUSE_UNICODE
+    return wxString([nsstring UTF8String], wxConvUTF8);
+#else
+    return wxString([nsstring lossyCString]);
+#endif // wxUSE_UNICODE
+}
+
+NSString* wxNSStringWithWxString(const wxString &wxstring)
+{
+#if wxUSE_UNICODE
+    return [NSString stringWithUTF8String: wxstring.mb_str(wxConvUTF8)];
+#else
+    return [NSString stringWithCString: wxstring.c_str() length:wxstring.Len()];
+#endif // wxUSE_UNICODE
+}
+
+// ----------------------------------------------------------------------------
+// helper class for getting the correct system colors according to the
+// appearance in effect
+// ----------------------------------------------------------------------------
+
+wxOSXEffectiveAppearanceSetter::wxOSXEffectiveAppearanceSetter()
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
+    if ( wxPlatformInfo::Get().CheckOSVersion(10, 14 ) )
+    {
+        formerAppearance = NSAppearance.currentAppearance;
+        NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+    }
+#endif
+}
+
+wxOSXEffectiveAppearanceSetter::~wxOSXEffectiveAppearanceSetter()
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
+    if ( wxPlatformInfo::Get().CheckOSVersion(10, 14 ) )
+        NSAppearance.currentAppearance = (NSAppearance*) formerAppearance;
+#endif
+}
+
 #endif
 

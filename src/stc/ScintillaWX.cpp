@@ -118,6 +118,7 @@ public:
           m_ct(ct), m_swx(swx), m_cx(wxDefaultCoord), m_cy(wxDefaultCoord)
         {
             SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+            SetName("wxSTCCallTip");
         }
 
     ~wxSTCCallTip() {
@@ -134,7 +135,7 @@ public:
     void OnPaint(wxPaintEvent& WXUNUSED(evt))
     {
         wxAutoBufferedPaintDC dc(this);
-        Surface* surfaceWindow = Surface::Allocate(0);
+        Surface* surfaceWindow = Surface::Allocate(m_swx->technology);
         surfaceWindow->Init(&dc, m_ct->wDraw.GetID());
         m_ct->PaintCT(surfaceWindow);
         surfaceWindow->Release();
@@ -270,6 +271,8 @@ ScintillaWX::ScintillaWX(wxStyledTextCtrl* win) {
     timers[tickScroll] = new wxSTCTimer(this,tickScroll);
     timers[tickWiden] = new wxSTCTimer(this,tickWiden);
     timers[tickDwell] = new wxSTCTimer(this,tickDwell);
+
+    m_surfaceData = NULL;
 }
 
 
@@ -278,6 +281,11 @@ ScintillaWX::~ScintillaWX() {
         delete i->second;
     }
     timers.clear();
+
+    if ( m_surfaceData != NULL ) {
+        delete m_surfaceData;
+    }
+
     Finalise();
 }
 
@@ -358,9 +366,9 @@ bool ScintillaWX::SetIdle(bool on) {
     if (idler.state != on) {
         // connect or disconnect the EVT_IDLE handler
         if (on)
-            stc->Connect(wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(wxStyledTextCtrl::OnIdle));
+            stc->Bind(wxEVT_IDLE, &wxStyledTextCtrl::OnIdle, stc);
         else
-            stc->Disconnect(wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(wxStyledTextCtrl::OnIdle));
+            stc->Unbind(wxEVT_IDLE, &wxStyledTextCtrl::OnIdle, stc);
         idler.state = on;
     }
     return idler.state;
@@ -490,9 +498,10 @@ void ScintillaWX::NotifyParent(SCNotification scn) {
 // a side effect that the AutoComp will also not be destroyed when switching
 // to another window, but I think that is okay.
 void ScintillaWX::CancelModes() {
-    if (! focusEvent)
+    if (! focusEvent) {
         AutoCompleteCancel();
-    ct.CallTipCancel();
+        ct.CallTipCancel();
+    }
     Editor::CancelModes();
 }
 
@@ -539,8 +548,8 @@ void ScintillaWX::Paste() {
 
 #if wxUSE_UNICODE
         // free up the old character buffer in case the text is real big
-        data.SetText(wxEmptyString);
-        text = wxEmptyString;
+        text.clear();
+        data.SetText(text);
 #endif
         const size_t len = buf.length();
         SelectionPosition selStart = sel.IsRectangular() ?
@@ -773,7 +782,7 @@ sptr_t ScintillaWX::DefWndProc(unsigned int /*iMessage*/, uptr_t /*wParam*/, spt
 sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
       switch (iMessage) {
 #if 0  // TODO: check this
-          
+
       case SCI_CALLTIPSHOW: {
           // NOTE: This is copied here from scintilla/src/ScintillaBase.cxx
           // because of the little tweak that needs done below for wxGTK.
@@ -814,6 +823,36 @@ sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
           ct.wCallTip.Show();
           break;
       }
+#endif
+
+#if wxUSE_GRAPHICS_DIRECT2D
+        case SCI_SETTECHNOLOGY:
+            if ((wParam == SC_TECHNOLOGY_DEFAULT) || (wParam == SC_TECHNOLOGY_DIRECTWRITE)) {
+                if (technology != static_cast<int>(wParam)) {
+                    SurfaceDataD2D* newSurfaceData(NULL);
+
+                    if (static_cast<int>(wParam) > SC_TECHNOLOGY_DEFAULT) {
+                        newSurfaceData =  new SurfaceDataD2D(this);
+
+                        if (!newSurfaceData->Initialised()) {
+                            // Failed to load Direct2D or DirectWrite so no effect
+                            delete newSurfaceData;
+                            return 0;
+                        }
+                    }
+
+                    technology = static_cast<int>(wParam);
+                    if ( m_surfaceData ) {
+                        delete m_surfaceData;
+                    }
+                    m_surfaceData = newSurfaceData;
+
+                    // Invalidate all cached information including layout.
+                    DropGraphics(true);
+                    InvalidateStyleRedraw();
+                }
+            }
+            break;
 #endif
 
 #ifdef SCI_LEXER
@@ -857,7 +896,7 @@ void ScintillaWX::DoPaint(wxDC* dc, wxRect rect) {
         // highlight positions.  So trigger a new paint event that will
         // repaint the whole window.
         stc->Refresh(false);
-        
+
 #if defined(__WXOSX__)
         // On Mac we also need to finish the current paint to make sure that
         // everything is on the screen that needs to be there between now and
