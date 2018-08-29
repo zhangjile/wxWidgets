@@ -1240,7 +1240,10 @@ void wxMacCoreGraphicsPathData::AddPath( const wxGraphicsPathData* path )
 // closes the current subpath
 void wxMacCoreGraphicsPathData::CloseSubpath()
 {
-    CGPathCloseSubpath( m_path );
+    if ( !CGPathIsEmpty(m_path) )
+    {
+        CGPathCloseSubpath( m_path );
+    }
 }
 
 // gets the last point of the current path, (0,0) if not yet set
@@ -1272,6 +1275,11 @@ void wxMacCoreGraphicsPathData::Transform( const wxGraphicsMatrixData* matrix )
 void wxMacCoreGraphicsPathData::GetBox(wxDouble *x, wxDouble *y, wxDouble *w, wxDouble *h) const
 {
     CGRect bounds = CGPathGetBoundingBox( m_path ) ;
+    if ( CGRectIsEmpty(bounds) )
+    {
+        bounds = CGRectZero;
+    }
+
     *x = bounds.origin.x;
     *y = bounds.origin.y;
     *w = bounds.size.width;

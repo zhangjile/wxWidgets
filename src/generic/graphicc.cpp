@@ -1195,7 +1195,17 @@ void wxCairoPathData::GetBox(wxDouble *x, wxDouble *y, wxDouble *w, wxDouble *h)
 {
     double x1,y1,x2,y2;
 
-    cairo_stroke_extents( m_pathContext, &x1, &y1, &x2, &y2 );
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 6, 0)
+    if ( cairo_version() >= CAIRO_VERSION_ENCODE(1, 6, 0) )
+    {
+        cairo_path_extents(m_pathContext, &x1, &y1, &x2, &y2);
+    }
+    else
+#endif
+    {
+        cairo_stroke_extents(m_pathContext, &x1, &y1, &x2, &y2);
+    }
+
     if ( x2 < x1 )
     {
         *x = x2;
@@ -2003,9 +2013,9 @@ wxCairoContext::wxCairoContext( wxGraphicsRenderer* renderer, const wxMemoryDC& 
         // bug 96482) so in this case we would need to pass non-transformed
         // DC to Cairo and to apply original DC transformation to the Cairo
         // context operations on our own.
-        // We believe this bug will be fixed in the next Cairo version.
-#if CAIRO_VERSION <= CAIRO_VERSION_ENCODE(1, 15, 2)
-        if ( cairo_version() <= CAIRO_VERSION_ENCODE(1, 15, 2) )
+        // Bug 96482 was fixed in Cairo 1.15.12 so this workaround needs
+        // to be applied only for older Cairo versions.
+        if ( cairo_version() < CAIRO_VERSION_ENCODE(1, 15, 12) )
         {
             wxCoord orgX, orgY;
             dc.GetDeviceOrigin(&orgX, &orgY);
@@ -2018,7 +2028,6 @@ wxCairoContext::wxCairoContext( wxGraphicsRenderer* renderer, const wxMemoryDC& 
                 adjustTransformFromDC = true;
             }
         }
-#endif // Cairo <= 1.15.2
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 15, 4)
         if ( cairo_version() >= CAIRO_VERSION_ENCODE(1, 15, 4) )
@@ -2147,9 +2156,7 @@ wxCairoContext::wxCairoContext( wxGraphicsRenderer* renderer, HDC handle )
     // bug 96482) so in this case we would need to pass non-transformed
     // DC to Cairo and to apply original DC transformation to the Cairo
     // context operations on our own.
-    // We believe this bug will be fixed in the next Cairo version.
-#if CAIRO_VERSION <= CAIRO_VERSION_ENCODE(1, 15, 2)
-    if ( cairo_version() <= CAIRO_VERSION_ENCODE(1, 15, 2) )
+    if ( cairo_version() < CAIRO_VERSION_ENCODE(1, 15, 12) )
     {
         POINT devOrg;
         ::GetViewportOrgEx(handle, &devOrg);
@@ -2177,7 +2184,6 @@ wxCairoContext::wxCairoContext( wxGraphicsRenderer* renderer, HDC handle )
             adjustTransformFromDC = true;
         }
     }
-#endif // Cairo <= 1.15.2
     m_mswSurface = cairo_win32_surface_create(handle);
     Init( cairo_create(m_mswSurface) );
     if ( adjustTransformFromDC )

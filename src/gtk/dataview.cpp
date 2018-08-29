@@ -74,7 +74,8 @@ public:
     ~wxGtkTreePathList()
     {
         // Delete the list contents, wxGtkList will delete the list itself.
-        g_list_foreach(m_list, (GFunc)gtk_tree_path_free, NULL);
+        for (GList* p = m_list; p; p = p->next)
+            gtk_tree_path_free(static_cast<GtkTreePath*>(p->data));
     }
 };
 
@@ -2275,6 +2276,23 @@ void GtkApplyAttr(GtkCellRendererText *renderer, const wxDataViewItemAttr& attr)
         g_value_unset( &gvalue );
     }
 
+    if (attr.GetStrikethrough())
+    {
+        GValue gvalue = G_VALUE_INIT;
+        g_value_init( &gvalue, G_TYPE_BOOLEAN );
+        g_value_set_boolean( &gvalue, TRUE );
+        g_object_set_property( G_OBJECT(renderer), "strikethrough", &gvalue );
+        g_value_unset( &gvalue );
+    }
+    else
+    {
+        GValue gvalue = G_VALUE_INIT;
+        g_value_init( &gvalue, G_TYPE_BOOLEAN );
+        g_value_set_boolean( &gvalue, FALSE );
+        g_object_set_property( G_OBJECT(renderer), "strikethrough-set", &gvalue );
+        g_value_unset( &gvalue );
+    }
+
     if (attr.HasBackgroundColour())
     {
         GValue gvalue = G_VALUE_INIT;
@@ -3343,6 +3361,17 @@ void wxDataViewColumn::SetSortOrder( bool ascending )
     internal->SetSortOrder(order);
     internal->SetSortColumn(m_model_column);
     internal->SetDataViewSortColumn(this);
+}
+
+void wxDataViewColumn::UnsetAsSortKey()
+{
+    GtkTreeViewColumn *column = GTK_TREE_VIEW_COLUMN(m_column);
+
+    gtk_tree_view_column_set_sort_indicator( column, FALSE );
+
+    wxDataViewCtrlInternal* internal = m_owner->GtkGetInternal();
+    internal->SetSortColumn(-1);
+    internal->SetDataViewSortColumn(NULL);
 }
 
 bool wxDataViewColumn::IsSortOrderAscending() const

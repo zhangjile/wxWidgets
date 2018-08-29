@@ -323,7 +323,7 @@ AC_DEFUN([AC_BAKEFILE_SHARED_LD],
             SHARED_LD_CXX="\${CXX} -dynamiclib -single_module -headerpad_max_install_names -o"
         fi
 
-        if test "x$GCC" == "xyes"; then
+        if test "x$GCC" = "xyes"; then
             PIC_FLAG="-dynamic -fPIC"
         fi
         if test "x$XLCC" = "xyes"; then
@@ -385,7 +385,7 @@ AC_DEFUN([AC_BAKEFILE_SHARED_LD],
       ;;
 
       powerpc-apple-macos* | \
-      *-*-freebsd* | *-*-openbsd* | *-*-netbsd* | *-*-gnu* | *-*-k*bsd*-gnu | \
+      *-*-freebsd* | *-*-openbsd* | *-*-haiku* | *-*-netbsd* | *-*-gnu* | *-*-k*bsd*-gnu | \
       *-*-mirbsd* | \
       *-*-sunos4* | \
       *-*-osf* | \
@@ -435,7 +435,7 @@ AC_DEFUN([AC_BAKEFILE_SHARED_VERSIONS],
     SONAME_FLAG=
 
     case "${BAKEFILE_HOST}" in
-      *-*-linux* | *-*-freebsd* | *-*-openbsd* | *-*-netbsd* | \
+      *-*-linux* | *-*-freebsd* | *-*-openbsd* | *-*-haiku* | *-*-netbsd* | \
       *-*-k*bsd*-gnu | *-*-mirbsd* | *-*-gnu* )
         if test "x$SUNCXX" = "xyes"; then
             SONAME_FLAG="-h "
