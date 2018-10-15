@@ -14,6 +14,7 @@
 #endif
 
 #include "wx/window.h"
+#include "wx/display.h"
 
 #ifndef WX_PRECOMP
     #include "wx/log.h"
@@ -5648,8 +5649,20 @@ void wxPopupMenuPositionCallback( GtkMenu *menu,
 #else
     gtk_widget_get_child_requisition(GTK_WIDGET(menu), &req);
 #endif
-
-    wxSize sizeScreen = wxGetDisplaySize();
+    
+    int displayWidth = 0;
+    int displayHeight = 0;
+    
+    // We assume here that the displays are positioned next to each other
+    for(size_t i = 0; i < wxDisplay::GetCount(); ++i) {
+        wxDisplay display(i);
+        displayWidth += display.GetClientArea().GetWidth();
+    }
+    
+    // Since the displays are not placed one on top of the other, we do not accumlate the height
+    displayHeight = wxGetDisplaySize().GetHeight();
+    
+    wxSize sizeScreen(displayWidth, displayHeight);
     wxPoint *pos = (wxPoint*)user_data;
 
     gint xmax = sizeScreen.x - req.width,
