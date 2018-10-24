@@ -459,6 +459,9 @@ bool ScintillaWX::ModifyScrollBars(int nMax, int nPage) {
         int sbThumb  = stc->GetScrollThumb(wxHORIZONTAL);
         int sbPos    = stc->GetScrollPos(wxHORIZONTAL);
         if ((sbMax != horizEnd) || (sbThumb != pageWidth) || (sbPos != 0)) {
+            if(pageWidth > horizEnd) {
+                pageWidth = horizEnd;
+            }
             stc->SetScrollbar(wxHORIZONTAL, sbPos, pageWidth, horizEnd);
             modified = true;
             if (scrollWidth < pageWidth) {
