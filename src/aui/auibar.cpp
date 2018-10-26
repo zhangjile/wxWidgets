@@ -293,33 +293,44 @@ void wxAuiGenericToolBarArt::DrawButton(
     int bmpX = 0, bmpY = 0;
     int textX = 0, textY = 0;
 
+    wxBitmap bmp;
+    if (item.GetState() & wxAUI_BUTTON_STATE_DISABLED)
+        bmp = item.GetDisabledBitmap();
+    else
+        bmp = item.GetBitmap();
+
     if (m_textOrientation == wxAUI_TBTOOL_TEXT_BOTTOM)
     {
-        bmpX = rect.x +
-                (rect.width/2) -
-                (item.GetBitmap().GetScaledWidth()/2);
+        if(bmp.IsOk())
+        {
+            bmpX = rect.x +
+                    (rect.width/2) -
+                    (bmp.GetScaledWidth()/2);
 
-        bmpY = rect.y +
-                ((rect.height-textHeight)/2) -
-                (item.GetBitmap().GetScaledHeight()/2);
-
+            bmpY = rect.y +
+                    ((rect.height-textHeight)/2) -
+                    (bmp.GetScaledHeight()/2);
+        }
+        
         textX = rect.x + (rect.width/2) - (textWidth/2) + 1;
         textY = rect.y + rect.height - textHeight - 1;
     }
     else if (m_textOrientation == wxAUI_TBTOOL_TEXT_RIGHT)
     {
-        bmpX = rect.x + wnd->FromDIP(3);
+        if(bmp.IsOk())
+        {
+            bmpX = rect.x + wnd->FromDIP(3);
 
-        bmpY = rect.y +
-                (rect.height/2) -
-                (item.GetBitmap().GetScaledHeight()/2);
-
-        textX = bmpX + wnd->FromDIP(3) + item.GetBitmap().GetScaledWidth();
+            bmpY = rect.y +
+                    (rect.height/2) -
+                    (bmp.GetScaledHeight()/2);
+        }
+        
+        textX = bmpX + wnd->FromDIP(3) + (bmp.IsOk() ? bmp.GetScaledWidth() : 0);
         textY = rect.y +
                  (rect.height/2) -
                  (textHeight/2);
     }
-
 
     if (!(item.GetState() & wxAUI_BUTTON_STATE_DISABLED))
     {
@@ -350,12 +361,6 @@ void wxAuiGenericToolBarArt::DrawButton(
             dc.DrawRectangle(rect);
         }
     }
-
-    wxBitmap bmp;
-    if (item.GetState() & wxAUI_BUTTON_STATE_DISABLED)
-        bmp = item.GetDisabledBitmap();
-    else
-        bmp = item.GetBitmap();
 
     if ( bmp.IsOk() )
         dc.DrawBitmap(bmp, bmpX, bmpY, true);
