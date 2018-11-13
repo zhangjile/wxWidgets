@@ -293,19 +293,21 @@ void wxAuiGenericToolBarArt::DrawButton(
     int bmpX = 0, bmpY = 0;
     int textX = 0, textY = 0;
 
-    wxBitmap bmp;
-    if (item.GetState() & wxAUI_BUTTON_STATE_DISABLED)
-        bmp = item.GetDisabledBitmap();
-    else
-        bmp = item.GetBitmap();
+    const wxBitmap& bmp = item.GetState() & wxAUI_BUTTON_STATE_DISABLED
+                            ? item.GetDisabledBitmap()
+                            : item.GetBitmap();
+
+    const wxSize bmpSize = bmp.IsOk() ? bmp.GetScaledSize() : wxSize(0, 0);
 
     if (m_textOrientation == wxAUI_TBTOOL_TEXT_BOTTOM)
     {
-        if(bmp.IsOk())
-        {
-            bmpX = rect.x +
-                    (rect.width/2) -
-                    (bmp.GetScaledWidth()/2);
+        bmpX = rect.x +
+                (rect.width/2) -
+                (bmpSize.x/2);
+
+        bmpY = rect.y +
+                ((rect.height-textHeight)/2) -
+                (bmpSize.y/2);
 
             bmpY = rect.y +
                     ((rect.height-textHeight)/2) -
@@ -317,16 +319,13 @@ void wxAuiGenericToolBarArt::DrawButton(
     }
     else if (m_textOrientation == wxAUI_TBTOOL_TEXT_RIGHT)
     {
-        if(bmp.IsOk())
-        {
-            bmpX = rect.x + wnd->FromDIP(3);
+        bmpX = rect.x + wnd->FromDIP(3);
 
-            bmpY = rect.y +
-                    (rect.height/2) -
-                    (bmp.GetScaledHeight()/2);
-        }
-        
-        textX = bmpX + wnd->FromDIP(3) + (bmp.IsOk() ? bmp.GetScaledWidth() : 0);
+        bmpY = rect.y +
+                (rect.height/2) -
+                (bmpSize.y/2);
+
+        textX = bmpX + wnd->FromDIP(3) + bmpSize.x;
         textY = rect.y +
                  (rect.height/2) -
                  (textHeight/2);
@@ -600,7 +599,7 @@ wxSize wxAuiGenericToolBarArt::GetToolSize(
 {
     if (!item.GetBitmap().IsOk() && !(m_flags & wxAUI_TB_TEXT))
         return wnd->FromDIP(wxSize(16,16));
-    
+
     const wxBitmap& bmp = item.GetBitmap();
     int width = bmp.IsOk() ? bmp.GetScaledWidth() : 0;
     int height = bmp.IsOk() ? bmp.GetScaledHeight() : 0;
