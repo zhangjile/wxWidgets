@@ -309,11 +309,6 @@ void wxAuiGenericToolBarArt::DrawButton(
                 ((rect.height-textHeight)/2) -
                 (bmpSize.y/2);
 
-            bmpY = rect.y +
-                    ((rect.height-textHeight)/2) -
-                    (bmp.GetScaledHeight()/2);
-        }
-        
         textX = rect.x + (rect.width/2) - (textWidth/2) + 1;
         textY = rect.y + rect.height - textHeight - 1;
     }
@@ -330,6 +325,7 @@ void wxAuiGenericToolBarArt::DrawButton(
                  (rect.height/2) -
                  (textHeight/2);
     }
+
 
     if (!(item.GetState() & wxAUI_BUTTON_STATE_DISABLED))
     {
