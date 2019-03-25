@@ -199,6 +199,7 @@ QT_WIN32_SRC=
     src/msw/dib.cpp
     src/msw/joystick.cpp
     src/msw/sound.cpp
+    src/qt/graphics.cpp
 
 QT_WIN32_HDR=
     wx/msw/ole/automtn.h
@@ -899,6 +900,7 @@ GUI_CMN_SRC =
     src/generic/renderg.cpp
     src/generic/richmsgdlgg.cpp
     src/generic/richtooltipg.cpp
+    src/generic/rowheightcache.cpp
     src/generic/sashwin.cpp
     src/generic/scrlwing.cpp
     src/generic/selstore.cpp
@@ -2812,6 +2814,12 @@ WEBVIEW_GTK_HDR =
 WEBVIEW_GTK_SRC =
     src/gtk/webview_webkit.cpp
 
+WEBVIEW2_GTK_SRC =
+    src/gtk/webview_webkit2.cpp
+
+WEBVIEW_WEBKIT2_EXTENSION_SRC =
+    src/gtk/webview_webkit2_extension.cpp
+
 # wxXRC
 
 XRC_SRC =
@@ -2991,7 +2999,7 @@ OPENGL_OSX_SHARED_SRC =
 
 # Misc plugin sources:
 
-UNIX_SOUND_SRC_SDL =
+UNIX_SOUND_SDL_SRC =
     src/unix/sound_sdl.cpp
 
 # wxAUI

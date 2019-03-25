@@ -155,15 +155,33 @@ static const unsigned char list_bits[] = {
 // -- wxAuiGenericTabArt class implementation --
 
 wxAuiGenericTabArt::wxAuiGenericTabArt()
+    : m_normalFont(*wxNORMAL_FONT)
+    , m_selectedFont(m_normalFont)
+    , m_activeCloseBmp(wxAuiBitmapFromBits(close_bits, 16, 16, *wxBLACK))
+    , m_disabledCloseBmp(wxAuiBitmapFromBits(close_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeLeftBmp(wxAuiBitmapFromBits(left_bits, 16, 16, *wxBLACK))
+    , m_disabledLeftBmp(wxAuiBitmapFromBits(left_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeRightBmp(wxAuiBitmapFromBits(right_bits, 16, 16, *wxBLACK))
+    , m_disabledRightBmp(wxAuiBitmapFromBits(right_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeWindowListBmp(wxAuiBitmapFromBits(list_bits, 16, 16, *wxBLACK))
+    , m_disabledWindowListBmp(wxAuiBitmapFromBits(list_bits, 16, 16, wxColour(128,128,128)))
 {
-    m_normalFont = *wxNORMAL_FONT;
-    m_selectedFont = *wxNORMAL_FONT;
     m_selectedFont.SetWeight(wxFONTWEIGHT_BOLD);
     m_measuringFont = m_selectedFont;
 
     m_fixedTabWidth = wxWindow::FromDIP(100, NULL);
     m_tabCtrlHeight = 0;
+    m_flags = 0;
 
+    UpdateColoursFromSystem();
+}
+
+wxAuiGenericTabArt::~wxAuiGenericTabArt()
+{
+}
+
+void wxAuiGenericTabArt::UpdateColoursFromSystem()
+{
 #if defined( __WXMAC__ ) && wxOSX_USE_COCOA_OR_CARBON
     wxColor baseColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 #else
@@ -186,24 +204,6 @@ wxAuiGenericTabArt::wxAuiGenericTabArt()
     m_borderPen = wxPen(borderColour);
     m_baseColourPen = wxPen(m_baseColour);
     m_baseColourBrush = wxBrush(m_baseColour);
-
-    m_activeCloseBmp = wxAuiBitmapFromBits(close_bits, 16, 16, *wxBLACK);
-    m_disabledCloseBmp = wxAuiBitmapFromBits(close_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeLeftBmp = wxAuiBitmapFromBits(left_bits, 16, 16, *wxBLACK);
-    m_disabledLeftBmp = wxAuiBitmapFromBits(left_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeRightBmp = wxAuiBitmapFromBits(right_bits, 16, 16, *wxBLACK);
-    m_disabledRightBmp = wxAuiBitmapFromBits(right_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeWindowListBmp = wxAuiBitmapFromBits(list_bits, 16, 16, *wxBLACK);
-    m_disabledWindowListBmp = wxAuiBitmapFromBits(list_bits, 16, 16, wxColour(128,128,128));
-
-    m_flags = 0;
-}
-
-wxAuiGenericTabArt::~wxAuiGenericTabArt()
-{
 }
 
 wxAuiTabArt* wxAuiGenericTabArt::Clone()
@@ -887,9 +887,17 @@ void wxAuiGenericTabArt::SetActiveColour(const wxColour& colour)
 // -- wxAuiSimpleTabArt class implementation --
 
 wxAuiSimpleTabArt::wxAuiSimpleTabArt()
+    : m_normalFont(*wxNORMAL_FONT)
+    , m_selectedFont(m_normalFont)
+    , m_activeCloseBmp(wxAuiBitmapFromBits(close_bits, 16, 16, *wxBLACK))
+    , m_disabledCloseBmp(wxAuiBitmapFromBits(close_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeLeftBmp(wxAuiBitmapFromBits(left_bits, 16, 16, *wxBLACK))
+    , m_disabledLeftBmp(wxAuiBitmapFromBits(left_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeRightBmp(wxAuiBitmapFromBits(right_bits, 16, 16, *wxBLACK))
+    , m_disabledRightBmp(wxAuiBitmapFromBits(right_bits, 16, 16, wxColour(128,128,128)))
+    , m_activeWindowListBmp(wxAuiBitmapFromBits(list_bits, 16, 16, *wxBLACK))
+    , m_disabledWindowListBmp(wxAuiBitmapFromBits(list_bits, 16, 16, wxColour(128,128,128)))
 {
-    m_normalFont = *wxNORMAL_FONT;
-    m_selectedFont = *wxNORMAL_FONT;
     m_selectedFont.SetWeight(wxFONTWEIGHT_BOLD);
     m_measuringFont = m_selectedFont;
 
@@ -907,18 +915,6 @@ wxAuiSimpleTabArt::wxAuiSimpleTabArt()
     m_normalBkPen = wxPen(normaltabColour);
     m_selectedBkBrush = wxBrush(selectedtabColour);
     m_selectedBkPen = wxPen(selectedtabColour);
-
-    m_activeCloseBmp = wxAuiBitmapFromBits(close_bits, 16, 16, *wxBLACK);
-    m_disabledCloseBmp = wxAuiBitmapFromBits(close_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeLeftBmp = wxAuiBitmapFromBits(left_bits, 16, 16, *wxBLACK);
-    m_disabledLeftBmp = wxAuiBitmapFromBits(left_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeRightBmp = wxAuiBitmapFromBits(right_bits, 16, 16, *wxBLACK);
-    m_disabledRightBmp = wxAuiBitmapFromBits(right_bits, 16, 16, wxColour(128,128,128));
-
-    m_activeWindowListBmp = wxAuiBitmapFromBits(list_bits, 16, 16, *wxBLACK);
-    m_disabledWindowListBmp = wxAuiBitmapFromBits(list_bits, 16, 16, wxColour(128,128,128));
 
 }
 

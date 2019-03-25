@@ -45,7 +45,7 @@ void wxGLAttribsBase::AddAttribBits(int searchVal, int combineVal)
     // Search for searchVal
     wxVector<int>::iterator it = m_GLValues.begin();
     while ( it != m_GLValues.end() && *it != searchVal )
-        it++;
+        ++it;
     // Have we searchVal?
     if ( it != m_GLValues.end() )
     {
@@ -76,7 +76,7 @@ wxGLCanvasBase::wxGLCanvasBase()
 
     // we always paint background entirely ourselves so prevent wx from erasing
     // it to avoid flicker
-    SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+    SetBackgroundStyle(wxBG_STYLE_PAINT);
 }
 
 bool wxGLCanvasBase::SetCurrent(const wxGLContext& context) const

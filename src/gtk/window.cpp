@@ -1072,14 +1072,10 @@ wxTranslateGTKKeyEventToWx(wxKeyEvent& event,
 
     wxLogTrace(TRACE_KEYS, wxT("\t-> wxKeyCode %ld"), key_code);
 
-    // sending unknown key events doesn't really make sense
-    if ( !key_code )
-        return false;
-
     event.m_keyCode = key_code;
 
 #if wxUSE_UNICODE
-    event.m_uniChar = gdk_keyval_to_unicode(key_code);
+    event.m_uniChar = gdk_keyval_to_unicode(key_code ? key_code : gdk_event->keyval);
     if ( !event.m_uniChar && event.m_keyCode <= WXK_DELETE )
     {
         // Set Unicode key code to the ASCII equivalent for compatibility. E.g.
@@ -1087,6 +1083,13 @@ wxTranslateGTKKeyEventToWx(wxKeyEvent& event,
         // codes of 13.
         event.m_uniChar = event.m_keyCode;
     }
+
+    // sending unknown key events doesn't really make sense
+    if ( !key_code && !event.m_uniChar )
+        return false;
+#else
+    if (!key_code)
+        return false;
 #endif // wxUSE_UNICODE
 
     // now fill all the other fields
@@ -1816,19 +1819,6 @@ gtk_window_motion_notify_callback( GtkWidget * WXUNUSED(widget),
 
     wxCOMMON_CALLBACK_PROLOGUE(gdk_event, win);
 
-    if (gdk_event->is_hint)
-    {
-        int x = 0;
-        int y = 0;
-#ifdef __WXGTK3__
-        gdk_window_get_device_position(gdk_event->window, gdk_event->device, &x, &y, NULL);
-#else
-        gdk_window_get_pointer(gdk_event->window, &x, &y, NULL);
-#endif
-        gdk_event->x = x;
-        gdk_event->y = y;
-    }
-
     g_lastMouseEvent = (GdkEvent*) gdk_event;
 
     wxMouseEvent event( wxEVT_MOTION );
@@ -1875,6 +1865,20 @@ gtk_window_motion_notify_callback( GtkWidget * WXUNUSED(widget),
     bool ret = win->GTKProcessEvent(event);
 
     g_lastMouseEvent = NULL;
+
+    // Request additional motion events. Done at the end to increase the
+    // chances that lower priority events requested by the handler above, such
+    // as painting, can be processed before the next motion event occurs.
+    // Otherwise a long-running handler can cause paint events to be entirely
+    // blocked while the mouse is moving.
+    if (gdk_event->is_hint)
+    {
+#ifdef __WXGTK3__
+        gdk_event_request_motions(gdk_event);
+#else
+        gdk_window_get_pointer(gdk_event->window, NULL, NULL, NULL);
+#endif
+    }
 
     return ret;
 }
@@ -2217,10 +2221,28 @@ size_allocate(GtkWidget* WXUNUSED_IN_GTK2(widget), GtkAllocation* alloc, wxWindo
 #if GTK_CHECK_VERSION(3,14,0)
     if (wx_is_at_least_gtk3(14))
     {
+        // Prevent under-allocated widgets from drawing outside their allocation
         GtkAllocation clip;
         gtk_widget_get_clip(widget, &clip);
         if (clip.width > w || clip.height > h)
-            gtk_widget_set_clip(widget, alloc);
+        {
+            GtkStyleContext* sc = gtk_widget_get_style_context(widget);
+            int outline_offset, outline_width;
+            gtk_style_context_get(sc, gtk_style_context_get_state(sc),
+                "outline-offset", &outline_offset, "outline-width", &outline_width, NULL);
+            const int outline = outline_offset + outline_width;
+            GtkAllocation a = *alloc;
+            if (outline > 0)
+            {
+                // Allow enough room for focus indicator "outline", it's drawn
+                // outside of GtkCheckButton allocation with Adwaita theme
+                a.x -= outline;
+                a.y -= outline;
+                a.width += outline + outline;
+                a.height += outline + outline;
+            }
+            gtk_widget_set_clip(widget, &a);
+        }
     }
 #endif
     if (win->m_wxwindow)
@@ -2913,6 +2935,11 @@ void wxWindowGTK::PostCreation()
     InheritAttributes();
 
     SetLayoutDirection(wxLayout_Default);
+
+    // if the window had been disabled before being created, it should be
+    // created in the initially disabled state
+    if ( !m_isEnabled )
+        DoEnable(false);
 
     // unless the window was created initially hidden (i.e. Hide() had been
     // called before Create()), we should show it at GTK+ level as well
@@ -4197,7 +4224,12 @@ bool wxWindowGTK::IsShown() const
 
 void wxWindowGTK::DoEnable( bool enable )
 {
-    wxCHECK_RET( (m_widget != NULL), wxT("invalid window") );
+    if ( !m_widget )
+    {
+        // The window can be disabled before being created, so just don't do
+        // anything in this case and, in particular, don't assert.
+        return;
+    }
 
     gtk_widget_set_sensitive( m_widget, enable );
     if (m_wxwindow && (m_wxwindow != m_widget))

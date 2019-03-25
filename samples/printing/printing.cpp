@@ -38,6 +38,7 @@
 
 #if wxUSE_GRAPHICS_CONTEXT
     #include "wx/graphics.h"
+    #include "wx/scopedptr.h"
 #endif
 
 #ifdef __WXMAC__
@@ -139,7 +140,7 @@ void MyApp::Draw(wxDC&dc)
     // dc.Clear();
     dc.SetFont(m_testFont);
 
-    // dc.SetBackgroundMode(wxTRANSPARENT);
+    // dc.SetBackgroundMode(wxBRUSHSTYLE_TRANSPARENT);
 
     dc.SetPen(*wxBLACK_PEN);
     dc.SetBrush(*wxLIGHT_GREY_BRUSH);
@@ -219,7 +220,7 @@ void MyApp::Draw(wxDC&dc)
         dc.DrawBitmap( m_bitmap, 10, 10 );
 
 #if wxUSE_GRAPHICS_CONTEXT
-    wxGraphicsContext *gc = wxGraphicsContext::CreateFromUnknownDC(dc);
+    wxScopedPtr<wxGraphicsContext> gc(wxGraphicsContext::CreateFromUnknownDC(dc));
 
     if (gc)
     {
@@ -243,12 +244,10 @@ void MyApp::Draw(wxDC&dc)
         gc->DrawText(text, 25.0, 60.0);
 
         // draw rectangle around the text
-        double w, h, d, el;
-        gc->GetTextExtent(text, &w, &h, &d, &el);
+        double w, h;
+        gc->GetTextExtent(text, &w, &h);
         gc->SetPen( *wxBLACK_PEN );
         gc->DrawRectangle(25.0, 60.0, w, h);
-
-        delete gc;
     }
 #endif
 
@@ -679,7 +678,7 @@ void MyPrintout::DrawPageTwo()
     dc->DrawLine(50, 250, (long)(50.0 + logUnits), 250);
     dc->DrawLine(50, 250, 50, (long)(250.0 + logUnits));
 
-    dc->SetBackgroundMode(wxTRANSPARENT);
+    dc->SetBackgroundMode(wxBRUSHSTYLE_TRANSPARENT);
     dc->SetBrush(*wxTRANSPARENT_BRUSH);
 
     { // GetTextExtent demo:

@@ -398,8 +398,6 @@ public:
     // this take advantage of it.
     virtual int GetChoiceSelection() const wxOVERRIDE { return m_index; }
 
-    virtual void OnValidationFailure( wxVariant& pendingValue ) wxOVERRIDE;
-
 protected:
 
     int GetIndex() const;
@@ -796,8 +794,8 @@ wxValidator* PROPNAME::DoGetValidator () const \
 
 #if wxUSE_EDITABLELISTBOX
 
-class WXDLLIMPEXP_FWD_CORE wxEditableListBox;
-class WXDLLIMPEXP_FWD_CORE wxListEvent;
+#include "wx/bmpbuttn.h"
+#include "wx/editlbox.h"
 
 #define wxAEDIALOG_STYLE \
     (wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxOK | wxCANCEL | wxCENTRE)
@@ -810,13 +808,6 @@ public:
 
     void Init();
 
-    wxPGArrayEditorDialog( wxWindow *parent,
-                         const wxString& message,
-                         const wxString& caption,
-                         long style = wxAEDIALOG_STYLE,
-                         const wxPoint& pos = wxDefaultPosition,
-                         const wxSize& sz = wxDefaultSize );
-
     bool Create( wxWindow *parent,
                  const wxString& message,
                  const wxString& caption,
@@ -827,6 +818,15 @@ public:
     void EnableCustomNewAction()
     {
         m_hasCustomNewAction = true;
+    }
+
+    void SetNewButtonText(const wxString& text)
+    {
+        m_customNewButtonText = text;
+        if ( m_elb && m_elb->GetNewButton() )
+        {
+            m_elb->GetNewButton()->SetToolTip(text);
+        }
     }
 
     // Set value modified by dialog.
@@ -880,6 +880,7 @@ protected:
 
     bool            m_modified;
     bool            m_hasCustomNewAction;
+    wxString        m_customNewButtonText;
 
     // These must be overridden - must return true on success.
     virtual wxString ArrayGet( size_t index ) = 0;
@@ -929,6 +930,7 @@ public:
         if ( !custBtText.empty() )
         {
             EnableCustomNewAction();
+            SetNewButtonText(custBtText);
             m_pCallingClass = pcc;
         }
     }

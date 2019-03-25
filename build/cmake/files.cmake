@@ -175,6 +175,7 @@ set(QT_WIN32_SRC
     src/msw/dialup.cpp
     src/msw/dib.cpp
     src/msw/joystick.cpp
+    src/qt/graphics.cpp
 )
 
 set(QT_WIN32_HDR
@@ -908,6 +909,7 @@ set(GUI_CMN_SRC
     src/generic/wizard.cpp
     src/generic/editlbox.cpp
     src/generic/datavgen.cpp
+    src/generic/rowheightcache.cpp
 )
 
 set(GUI_CMN_HDR
@@ -2869,6 +2871,14 @@ set(WEBVIEW_GTK_SRC
     src/gtk/webview_webkit.cpp
 )
 
+set(WEBVIEW2_GTK_SRC
+    src/gtk/webview_webkit2.cpp
+)
+
+set(WEBVIEW_WEBKIT2_EXTENSION_SRC
+    src/gtk/webview_webkit2_extension.cpp
+)
+
 set(XRC_SRC
     src/xrc/xh_activityindicator.cpp
     src/xrc/xh_animatctrl.cpp
@@ -3049,7 +3059,7 @@ set(OPENGL_OSX_SHARED_SRC
     src/osx/glcanvas_osx.cpp
 )
 
-set(UNIX_SOUND_SRC_SDL
+set(UNIX_SOUND_SDL_SRC
     src/unix/sound_sdl.cpp
 )
 

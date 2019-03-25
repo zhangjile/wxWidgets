@@ -97,7 +97,7 @@ public:
                 const wxString &name = wxT("frame"))
                     : wxFrame(parent, id, title, pos, size, style | wxFRAME_SHAPED, name)
     {
-        SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+        SetBackgroundStyle(wxBG_STYLE_PAINT);
         m_amount=0;
         m_maxWidth=0;
         m_maxHeight=0;
@@ -604,6 +604,7 @@ wxBEGIN_EVENT_TABLE(wxAuiManager, wxEvtHandler)
     EVT_MOUSE_CAPTURE_LOST(wxAuiManager::OnCaptureLost)
     EVT_CHILD_FOCUS(wxAuiManager::OnChildFocus)
     EVT_AUI_FIND_MANAGER(wxAuiManager::OnFindManager)
+    EVT_SYS_COLOUR_CHANGED(wxAuiManager::OnSysColourChanged)
 wxEND_EVENT_TABLE()
 
 
@@ -611,7 +612,6 @@ wxAuiManager::wxAuiManager(wxWindow* managed_wnd, unsigned int flags)
 {
     m_action = actionNone;
     m_actionWindow = NULL;
-    m_lastMouseMove = wxPoint();
     m_hoverButton = NULL;
     m_art = new wxAuiDefaultDockArt;
     m_hintWnd = NULL;
@@ -646,6 +646,13 @@ wxAuiManager::~wxAuiManager()
 #endif
 
     delete m_art;
+}
+
+void wxAuiManager::OnSysColourChanged(wxSysColourChangedEvent& event)
+{
+    m_art->UpdateColoursFromSystem();
+    m_frame->Refresh();
+    event.Skip(true);
 }
 
 // creates a floating frame for the windows
@@ -1718,17 +1725,14 @@ void wxAuiManager::GetPanePositionsAndSizes(wxAuiDockInfo& dock,
     if (action_pane == -1)
         return;
 
-    offset = 0;
     for (pane_i = action_pane-1; pane_i >= 0; --pane_i)
     {
         int amount = positions[pane_i+1] - (positions[pane_i] + sizes[pane_i]);
 
         if (amount >= 0)
-            offset += amount;
+            ;
         else
             positions[pane_i] -= -amount;
-
-        offset += sizes[pane_i];
     }
 
     // if the dock mode is fixed, make sure none of the panes
@@ -3898,7 +3902,7 @@ void wxAuiManager::Render(wxDC* dc)
 
 void wxAuiManager::Repaint(wxDC* dc)
 {
-#ifdef __WXMAC__ 
+#ifdef __WXMAC__
     if ( dc == NULL )
     {
         m_frame->Refresh() ;

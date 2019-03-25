@@ -73,7 +73,7 @@ bool wxHeaderCtrl::Create(wxWindow *parent,
 
     // tell the system to not paint the background at all to avoid flicker as
     // we paint the entire window area in our OnPaint()
-    SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+    SetBackgroundStyle(wxBG_STYLE_PAINT);
 
     return true;
 }
@@ -686,8 +686,11 @@ void wxHeaderCtrl::OnMouse(wxMouseEvent& mevent)
             wxASSERT_MSG( !IsResizing(), "reentering column resize mode?" );
             StartOrContinueResizing(col, xPhysical);
         }
-        else // on column itself
+        // on column itself - both header and column must have the appropriate
+        // flags to allow dragging the column
+        else if ( HasFlag(wxHD_ALLOW_REORDER) && GetColumn(col).IsReorderable() )
         {
+
             // start dragging the column
             wxASSERT_MSG( !IsReordering(), "reentering column move mode?" );
 

@@ -17,6 +17,7 @@
 #include "wx/html/htmltag.h"
 #include "wx/html/htmldefs.h"
 #include "wx/window.h"
+#include "wx/brush.h"
 
 
 class WXDLLIMPEXP_FWD_HTML wxHtmlWindowInterface;
@@ -81,7 +82,7 @@ enum wxHtmlSelectionState
 class WXDLLIMPEXP_HTML wxHtmlRenderingState
 {
 public:
-    wxHtmlRenderingState() : m_selState(wxHTML_SEL_OUT) { m_bgMode = wxSOLID; }
+    wxHtmlRenderingState() : m_selState(wxHTML_SEL_OUT) { m_bgMode = wxBRUSHSTYLE_SOLID; }
 
     void SetSelectionState(wxHtmlSelectionState s) { m_selState = s; }
     wxHtmlSelectionState GetSelectionState() const { return m_selState; }
@@ -570,7 +571,7 @@ protected:
 class WXDLLIMPEXP_HTML wxHtmlColourCell : public wxHtmlCell
 {
 public:
-    wxHtmlColourCell(const wxColour& clr, int flags = wxHTML_CLR_FOREGROUND) : wxHtmlCell() {m_Colour = clr; m_Flags = flags;}
+    wxHtmlColourCell(const wxColour& clr, int flags = wxHTML_CLR_FOREGROUND) : wxHtmlCell(), m_Colour(clr) { m_Flags = flags;}
     virtual void Draw(wxDC& dc, int x, int y, int view_y1, int view_y2,
                       wxHtmlRenderingInfo& info) wxOVERRIDE;
     virtual void DrawInvisible(wxDC& dc, int x, int y,
@@ -595,7 +596,7 @@ protected:
 class WXDLLIMPEXP_HTML wxHtmlFontCell : public wxHtmlCell
 {
 public:
-    wxHtmlFontCell(wxFont *font) : wxHtmlCell() { m_Font = (*font); }
+    wxHtmlFontCell(wxFont *font) : wxHtmlCell(), m_Font(*font) { }
     virtual void Draw(wxDC& dc, int x, int y, int view_y1, int view_y2,
                       wxHtmlRenderingInfo& info) wxOVERRIDE;
     virtual void DrawInvisible(wxDC& dc, int x, int y,

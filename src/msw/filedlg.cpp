@@ -517,8 +517,7 @@ int wxFileDialog::ShowModal()
             case wxT('/'):
                 // convert to backslash
                 ch = wxT('\\');
-
-                // fall through
+                wxFALLTHROUGH;
 
             case wxT('\\'):
                 while ( i < len - 1 )
@@ -533,7 +532,7 @@ int wxFileDialog::ShowModal()
                     else
                         break;
                 }
-                // fall through
+                wxFALLTHROUGH;
 
             default:
                 // normal char
@@ -657,8 +656,7 @@ int wxFileDialog::ShowModal()
 
         m_filterIndex = (int)of.nFilterIndex - 1;
 
-        if ( !of.nFileExtension ||
-             (of.nFileExtension && fileNameBuffer[of.nFileExtension] == wxT('\0')) )
+        if ( !of.nFileExtension || fileNameBuffer[of.nFileExtension] == wxT('\0') )
         {
             // User has typed a filename without an extension:
             const wxChar* extension = filterBuffer.t_str();
