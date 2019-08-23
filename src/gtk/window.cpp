@@ -2272,7 +2272,6 @@ size_allocate(GtkWidget* WXUNUSED_IN_GTK2(widget), GtkAllocation* alloc, wxWindo
         // so always get size from m_widget->allocation
         win->m_width  = a.width;
         win->m_height = a.height;
-        if (!win->m_nativeSizeEvent)
         {
             wxSizeEvent event(win->GetSize(), win->GetId());
             event.SetEventObject(win);
@@ -3667,6 +3666,7 @@ void wxWindowGTK::ConnectWidget( GtkWidget *widget )
         // priority slightly higher than GDK_PRIORITY_EVENTS
         g_source_set_priority(source, GDK_PRIORITY_EVENTS - 1);
         g_source_attach(source, NULL);
+        g_source_unref(source);
     }
 
     g_signal_connect (widget, "key_press_event",
@@ -4769,25 +4769,25 @@ void wxWindowGTK::RealizeTabOrder()
                 {
                     if ( focusableFromKeyboard )
                     {
-                        // wxComboBox et al. needs to focus on on a different
-                        // widget than m_widget, so if the main widget isn't
-                        // focusable try the connect widget
+                        // We may need to focus on the connect widget if the
+                        // main one isn't focusable, but note that we still use
+                        // the main widget if neither it nor connect widget is
+                        // focusable, without this using a wxStaticText before
+                        // wxChoice wouldn't work at all, for example.
                         GtkWidget* w = win->m_widget;
                         if ( !gtk_widget_get_can_focus(w) )
                         {
-                            w = win->GetConnectWidget();
-                            if ( !gtk_widget_get_can_focus(w) )
-                                w = NULL;
+                            GtkWidget* const cw = win->GetConnectWidget();
+                            if ( cw != w && gtk_widget_get_can_focus(cw) )
+                                w = cw;
                         }
 
-                        if ( w )
-                        {
-                            mnemonicWindow->GTKWidgetDoSetMnemonic(w);
-                            mnemonicWindow = NULL;
-                        }
+                        mnemonicWindow->GTKWidgetDoSetMnemonic(w);
+                        mnemonicWindow = NULL;
                     }
                 }
-                else if ( win->GTKWidgetNeedsMnemonic() )
+
+                if ( win->GTKWidgetNeedsMnemonic() )
                 {
                     mnemonicWindow = win;
                 }

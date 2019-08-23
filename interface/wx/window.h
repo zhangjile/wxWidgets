@@ -2037,6 +2037,20 @@ public:
     virtual wxVisualAttributes GetDefaultAttributes() const;
 
     /**
+        Return the DPI of the display used by this window.
+
+        The returned value can be different for different windows on systems
+        with support for per-monitor DPI values, such as Microsoft Windows 10.
+
+        If the DPI is not available, returns @c wxSize(0,0) object.
+
+        @see wxDisplay::GetPPI()
+
+        @since 3.1.3
+     */
+    virtual wxSize GetDPI() const;
+
+    /**
         Returns the font for this window.
 
         @see SetFont()
@@ -3758,7 +3772,8 @@ public:
             or wxMOD_WIN specifying the modifier keys that have to be pressed along
             with the key.
         @param virtualKeyCode
-            The virtual key code of the hotkey.
+            The key code of the hotkey, e.g. an ASCII character such as @c 'K'
+            or one of elements of wxKeyCode enum.
 
         @return @true if the hotkey was registered successfully. @false if some
                  other application already registered a hotkey with this

@@ -404,6 +404,19 @@ wxSpinCtrl::~wxSpinCtrl()
     gs_spinForTextCtrl.erase(GetBuddyHwnd());
 }
 
+void wxSpinCtrl::Refresh(bool eraseBackground, const wxRect *rect)
+{
+    wxControl::Refresh(eraseBackground, rect);
+
+    UINT flags = RDW_INVALIDATE;
+    if ( eraseBackground )
+        flags |= RDW_ERASE;
+
+    // Don't bother computing the intersection of the given rectangle with the
+    // buddy control, just always refresh it entirely, as it's much simpler.
+    ::RedrawWindow(GetBuddyHwnd(), NULL, NULL, flags);
+}
+
 // ----------------------------------------------------------------------------
 // wxSpinCtrl-specific methods
 // ----------------------------------------------------------------------------
@@ -564,8 +577,7 @@ bool wxSpinCtrl::SetFont(const wxFont& font)
         return false;
     }
 
-    WXHANDLE hFont = GetFont().GetResourceHandle();
-    (void)::SendMessage(GetBuddyHwnd(), WM_SETFONT, (WPARAM)hFont, TRUE);
+    wxSetWindowFont(GetBuddyHwnd(), GetFont());
 
     return true;
 }
@@ -734,21 +746,19 @@ wxSize wxSpinCtrl::DoGetSizeFromTextSize(int xlen, int ylen) const
 {
     wxSize sizeBtn = wxSpinButton::DoGetBestSize();
 
-    int y;
-    wxGetCharSize(GetHWND(), NULL, &y, GetFont());
-    // JACS: we should always use the height calculated
-    // from above, because otherwise we'll get a spin control
-    // that's too big. So never use the height calculated
-    // from wxSpinButton::DoGetBestSize().
+    // Create a temporary wxTextCtrl wrapping our existing HWND in order to be
+    // able to reuse its GetSizeFromTextSize() implementation.
+    wxTextCtrl text;
+    TempHWNDSetter set(&text, m_hwndBuddy);
 
-    wxSize tsize(xlen + sizeBtn.x - GetOverlap(),
-                 EDIT_HEIGHT_FROM_CHAR_HEIGHT(y));
+    // It's unnecessary to actually change the font used by the buddy control,
+    // but we do need to ensure that the helper wxTextCtrl wxFont matches what
+    // it is used as GetSizeFromTextSize() uses the current font.
+    text.wxWindowBase::SetFont(GetFont());
 
-    // Check if the user requested a non-standard height.
-    if ( ylen > 0 )
-        tsize.IncBy(0, ylen - y);
-
-    return tsize;
+    // Increase the width to accommodate the button, which should fit inside
+    // the text control while taking account of the overlap.
+    return text.GetSizeFromTextSize(xlen + sizeBtn.x - GetOverlap(), ylen);
 }
 
 void wxSpinCtrl::DoMoveWindow(int x, int y, int width, int height)
@@ -847,6 +857,16 @@ void wxSpinCtrl::DoGetPosition(int *x, int *y) const
     wxSpinButton::DoGetPosition(&xText, y);
 
     *x = wxMin(xBuddy, xText);
+}
+
+void wxSpinCtrl::DoScreenToClient(int *x, int *y) const
+{
+    wxWindow::MSWDoScreenToClient(GetBuddyHwnd(), x, y);
+}
+
+void wxSpinCtrl::DoClientToScreen(int *x, int *y) const
+{
+    wxWindow::MSWDoClientToScreen(GetBuddyHwnd(), x, y);
 }
 
 #endif // wxUSE_SPINCTRL

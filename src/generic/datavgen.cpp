@@ -71,8 +71,6 @@ class wxDataViewCtrl;
 // constants
 //-----------------------------------------------------------------------------
 
-static const int SCROLL_UNIT_X = 15;
-
 // the cell padding on the left/right
 static const int PADDING_RIGHTLEFT = 3;
 
@@ -1298,7 +1296,7 @@ bool wxDataViewToggleRenderer::Render( wxRect cell, wxDC *dc, int WXUNUSED(state
     if (m_toggle)
         flags |= wxCONTROL_CHECKED;
     if (GetMode() != wxDATAVIEW_CELL_ACTIVATABLE ||
-        GetEnabled() == false)
+        !(GetOwner()->GetOwner()->IsEnabled() && GetEnabled()))
         flags |= wxCONTROL_DISABLED;
 
     // Ensure that the check boxes always have at least the minimal required
@@ -2510,11 +2508,13 @@ void wxDataViewMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
     for (unsigned int i = col_start; i < col_last; i++)
     {
         wxDataViewColumn *col = GetOwner()->GetColumnAt( i );
+        if ( col->IsHidden() )
+            continue;       // skip it!
+
         wxDataViewRenderer *cell = col->GetRenderer();
         cell_rect.width = col->GetWidth();
-
-        if ( col->IsHidden() || cell_rect.width <= 0 )
-            continue;       // skip it!
+        if ( cell_rect.width <= 0 )
+            continue;
 
         cell_rect.y = first_line_start;
         for (unsigned int item = item_start; item < item_last; item++)
@@ -2573,17 +2573,17 @@ void wxDataViewMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
                 // Calculate the indent first
                 indent = GetOwner()->GetIndent() * node->GetIndentLevel();
 
-                // We don't have any method to return the size of the expander
-                // button currently (TODO: add one to wxRendererNative), so
-                // just guesstimate it.
-                const int expWidth = 3*dc.GetCharWidth();
+                // Get expander size
+                wxSize expSize = wxRendererNative::Get().GetExpanderSize(this);
 
                 // draw expander if needed
                 if ( node->HasChildren() )
                 {
                     wxRect rect = cell_rect;
                     rect.x += indent;
-                    rect.width = expWidth;
+                    rect.y += (cell_rect.GetHeight() - expSize.GetHeight()) / 2; // center vertically
+                    rect.width = expSize.GetWidth();
+                    rect.height = expSize.GetHeight();
 
                     int flag = 0;
                     if ( m_underMouse == node )
@@ -2598,7 +2598,7 @@ void wxDataViewMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
                     wxRendererNative::Get().DrawTreeItemButton( this, dc, rect, flag);
                 }
 
-                indent += expWidth;
+                indent += expSize.GetWidth();
 
                 // force the expander column to left-center align
                 cell->SetAlignment( wxALIGN_CENTER_VERTICAL );
@@ -5177,7 +5177,7 @@ bool wxDataViewCtrl::Create(wxWindow *parent,
     sizer->Add( m_clientArea, 1, wxGROW );
     SetSizer( sizer );
 
-    EnableSystemTheme();
+    EnableSystemThemeByDefault();
 
 #if wxUSE_ACCESSIBILITY
     wxAccessible::NotifyEvent(wxACC_EVENT_OBJECT_CREATE, this, wxOBJID_CLIENT, wxACC_SELF);

@@ -3,7 +3,7 @@
 // Purpose:     wxTextEntry implementation for wxMSW
 // Author:      Vadim Zeitlin
 // Created:     2007-09-26
-// Copyright:   (c) 2007 Vadim Zeitlin <vadim@wxwindows.org>
+// Copyright:   (c) 2007 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1034,6 +1034,17 @@ wxPoint wxTextEntry::DoGetMargins() const
     int left = LOWORD(lResult);
     int top = -1;
     return wxPoint(left, top);
+}
+
+// ----------------------------------------------------------------------------
+// input handling
+// ----------------------------------------------------------------------------
+
+bool wxTextEntry::ClickDefaultButtonIfPossible()
+{
+    return !wxIsAnyModifierDown() &&
+                wxWindow::MSWClickButtonIfPossible(
+                    wxWindow::MSWGetDefaultButtonFor(GetEditableWindow()));
 }
 
 #endif // wxUSE_TEXTCTRL || wxUSE_COMBOBOX

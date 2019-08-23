@@ -276,6 +276,7 @@ set(QT_HDR
     wx/qt/dataview.h
     wx/generic/activityindicator.h
     ${QT_PLATFORM_HDR}
+    wx/qt/treectrl.h
 )
 
 set(QT_SRC
@@ -374,6 +375,7 @@ set(QT_SRC
     src/qt/dataview.cpp
     src/qt/taskbar.cpp
     ${QT_PLATFORM_SRC}
+    src/qt/treectrl.cpp
 )
 
 set(MEDIA_QT_SRC
@@ -2417,7 +2419,6 @@ set(OSX_SHARED_HDR
     wx/osx/frame.h
     wx/osx/gauge.h
     wx/osx/listbox.h
-    wx/osx/listctrl.h
     wx/osx/mdi.h
     wx/osx/menu.h
     wx/osx/menuitem.h
@@ -2947,6 +2948,7 @@ set(XRC_SRC
     src/xrc/xmlres.cpp
     src/xrc/xmladv.cpp
     src/xrc/xmlrsall.cpp
+    src/xrc/xh_dataview.cpp
 )
 
 set(XRC_HDR
@@ -3016,6 +3018,7 @@ set(XRC_HDR
     wx/xrc/xh_unkwn.h
     wx/xrc/xh_wizrd.h
     wx/xrc/xmlres.h
+    wx/xrc/xh_dataview.h
 )
 
 set(XML_SRC
@@ -3196,13 +3199,20 @@ set(RICHTEXT_HDR
     wx/xrc/xh_richtext.h
 )
 
-set(STC_SRC
+set(STC_CMN_SRC
     src/stc/stc.cpp
     src/stc/PlatWX.cpp
     src/stc/ScintillaWX.cpp
 )
 
-set(STC_HDR
+set(STC_CMN_HDR
     wx/stc/stc.h
+)
+
+set(STC_OSX_COCOA_SRC
+    src/stc/PlatWXcocoa.mm
+)
+
+set(STC_OSX_COCOA_HDR
 )
 

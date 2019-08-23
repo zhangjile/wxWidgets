@@ -729,16 +729,16 @@ void wxMSWDCImpl::Clear()
             return;
     }
 
-    DWORD colour = ::GetBkColor(GetHdc());
-    HBRUSH brush = ::CreateSolidBrush(colour);
+    if ( !m_backgroundBrush.IsOk() )
+        return;
+
     RECT rect;
     ::GetClipBox(GetHdc(), &rect);
     // Inflate the box by 1 unit in each direction
     // to compensate rounding errors if DC is the subject
     // of complex transformation (is e.g. rotated).
     ::InflateRect(&rect, 1, 1);
-    ::FillRect(GetHdc(), &rect, brush);
-    ::DeleteObject(brush);
+    ::FillRect(GetHdc(), &rect, GetHbrushOf(m_backgroundBrush));
 
     RealizeScaleAndOrigin();
 }
@@ -859,24 +859,6 @@ void wxMSWDCImpl::DoDrawArc(wxCoord x1, wxCoord y1,
 
     CalcBoundingBox(xc - r, yc - r);
     CalcBoundingBox(xc + r, yc + r);
-}
-
-void wxMSWDCImpl::DoDrawCheckMark(wxCoord x1, wxCoord y1,
-                           wxCoord width, wxCoord height)
-{
-    wxCoord x2 = x1 + width,
-            y2 = y1 + height;
-
-    RECT rect;
-    rect.left   = x1;
-    rect.top    = y1;
-    rect.right  = x2;
-    rect.bottom = y2;
-
-    DrawFrameControl(GetHdc(), &rect, DFC_MENU, DFCS_MENUCHECK);
-
-    CalcBoundingBox(x1, y1);
-    CalcBoundingBox(x2, y2);
 }
 
 void wxMSWDCImpl::DoDrawPoint(wxCoord x, wxCoord y)
@@ -1104,7 +1086,7 @@ void wxMSWDCImpl::DoDrawSpline(const wxPointList *points)
     const size_t n_bezier_points = n_points * 3 + 1;
     POINT *lppt = new POINT[n_bezier_points];
     size_t bezier_pos = 0;
-    wxCoord x1, y1, x2, y2, cx1, cy1, cx4, cy4;
+    wxCoord x1, y1, x2, y2, cx1, cy1;
 
     wxPointList::compatibility_iterator node = points->GetFirst();
     wxPoint *p = node->GetData();
@@ -1135,6 +1117,7 @@ void wxMSWDCImpl::DoDrawSpline(const wxPointList *points)
     while ((node = node->GetNext()))
 #endif // !wxUSE_STD_CONTAINERS
     {
+        int cx4, cy4;
         p = (wxPoint *)node->GetData();
         x1 = x2;
         y1 = y2;
@@ -2437,6 +2420,11 @@ wxSize wxMSWDCImpl::GetPPI() const
     int y = ::GetDeviceCaps(GetHdc(), LOGPIXELSY);
 
     return wxSize(x, y);
+}
+
+double wxMSWDCImpl::GetContentScaleFactor() const
+{
+    return GetPPI().y / 96.0;
 }
 
 // ----------------------------------------------------------------------------

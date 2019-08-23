@@ -99,6 +99,8 @@ public:
 
     virtual bool Reparent(wxWindowBase *newParent) wxOVERRIDE;
 
+    virtual wxSize GetDPI() const wxOVERRIDE;
+
     virtual void WarpPointer(int x, int y) wxOVERRIDE;
     virtual bool EnableTouchEvents(int eventsMask) wxOVERRIDE;
 
@@ -621,6 +623,8 @@ protected:
                                  int *descent = NULL,
                                  int *externalLeading = NULL,
                                  const wxFont *font = NULL) const wxOVERRIDE;
+    static void MSWDoClientToScreen( WXHWND hWnd, int *x, int *y );
+    static void MSWDoScreenToClient( WXHWND hWnd, int *x, int *y );
     virtual void DoClientToScreen( int *x, int *y ) const wxOVERRIDE;
     virtual void DoScreenToClient( int *x, int *y ) const wxOVERRIDE;
     virtual void DoGetPosition( int *x, int *y ) const wxOVERRIDE;

@@ -4099,15 +4099,6 @@ gboolean wxDataViewCtrlInternal::iter_children( GtkTreeIter *iter, GtkTreeIter *
     }
     else
     {
-        if (iter == NULL)
-        {
-            if (m_root->GetChildCount() == 0) return FALSE;
-            iter->stamp = m_gtk_model->stamp;
-            iter->user_data = (gpointer) m_root->GetChildren().Item( 0 );
-            return TRUE;
-        }
-
-
         wxDataViewItem item;
         if (parent)
             item = wxDataViewItem( (void*) parent->user_data );
@@ -4741,6 +4732,11 @@ bool wxDataViewCtrl::Create(wxWindow *parent,
                       G_CALLBACK (gtk_dataview_button_press_callback), this);
 
     return true;
+}
+
+GdkWindow* wxDataViewCtrl::GTKGetWindow(wxArrayGdkWindows& /* windows */) const
+{
+    return gtk_tree_view_get_bin_window(GTK_TREE_VIEW(m_treeview));
 }
 
 wxDataViewItem wxDataViewCtrl::GTKPathToItem(GtkTreePath *path) const

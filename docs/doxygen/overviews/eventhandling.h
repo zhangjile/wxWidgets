@@ -98,10 +98,11 @@ First define one or more <em>event handlers</em>. They
 are just simple methods of the class that take as a parameter a
 reference to an object of a wxEvent-derived class and have no return value (any
 return information is passed via the argument, which is why it is non-const).
-You also need to insert a macro
+You also need to insert a line with the macro indicating that the class uses an
+event table, like this:
 
 @code
-wxDECLARE_EVENT_TABLE()
+wxDECLARE_EVENT_TABLE();
 @endcode
 
 somewhere in the class declaration. It doesn't matter where it appears but
@@ -132,7 +133,7 @@ private:
     // obligation to do that; this one is an event handler too:
     void DoTest(wxCommandEvent& event);
 
-    wxDECLARE_EVENT_TABLE()
+    wxDECLARE_EVENT_TABLE();
 };
 @endcode
 
@@ -224,7 +225,7 @@ global scope as with the event tables), call its Bind<>() method like this:
 @code
 MyFrame::MyFrame(...)
 {
-      Bind(wxEVT_COMMAND_MENU_SELECTED, &MyFrame::OnExit, this, wxID_EXIT);
+      Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 }
 @endcode
 
@@ -323,7 +324,7 @@ MyFrameHandler myFrameHandler;
 
 MyFrame::MyFrame()
 {
-      Bind( wxEVT_COMMAND_MENU_SELECTED, &MyFrameHandler::OnFrameExit,
+      Bind( wxEVT_MENU, &MyFrameHandler::OnFrameExit,
               &myFrameHandler, wxID_EXIT );
 }
 @endcode
@@ -345,7 +346,7 @@ void HandleExit( wxCommandEvent & )
 
 MyFrame::MyFrame()
 {
-    Bind( wxEVT_COMMAND_MENU_SELECTED, &HandleExit, wxID_EXIT );
+    Bind( wxEVT_MENU, &HandleExit, wxID_EXIT );
 }
 @endcode
 
@@ -366,7 +367,7 @@ MyFunctor myFunctor;
 
 MyFrame::MyFrame()
 {
-    Bind( wxEVT_COMMAND_MENU_SELECTED, myFunctor, wxID_EXIT );
+    Bind( wxEVT_MENU, myFunctor, wxID_EXIT );
 }
 @endcode
 
@@ -376,7 +377,7 @@ separate functor class:
 @code
 MyFrame::MyFrame()
 {
-    Bind(wxEVT_COMMAND_MENU_SELECTED,
+    Bind(wxEVT_MENU,
          [](wxCommandEvent&) {
             // Do something useful
          },
@@ -406,7 +407,7 @@ MyFrame::MyFrame()
 {
     function< void ( wxCommandEvent & ) > exitHandler( bind( &MyHandler::OnExit, &myHandler, _1 ));
 
-    Bind( wxEVT_COMMAND_MENU_SELECTED, exitHandler, wxID_EXIT );
+    Bind( wxEVT_MENU, exitHandler, wxID_EXIT );
 }
 @endcode
 
@@ -427,7 +428,7 @@ MyFrame::MyFrame()
     function< void ( wxCommandEvent & ) > exitHandler(
             bind( &MyHandler::OnExit, &myHandler, EXIT_FAILURE, _1, "Bye" ));
 
-    Bind( wxEVT_COMMAND_MENU_SELECTED, exitHandler, wxID_EXIT );
+    Bind( wxEVT_MENU, exitHandler, wxID_EXIT );
 }
 @endcode
 

@@ -118,7 +118,27 @@ public:
     // set the XFLD
     void SetXFontName(const wxString& xFontName);
 #elif defined(__WXMSW__)
-    wxNativeFontInfo(const LOGFONT& lf_) : lf(lf_), pointSize(0.0f) { }
+    wxNativeFontInfo(const LOGFONT& lf_)
+        : lf(lf_),
+          pointSize(GetPointSizeFromLogFontHeight(lf.lfHeight))
+    {
+    }
+
+    // MSW-specific: get point size from LOGFONT height using the default DPI.
+    static float GetPointSizeFromLogFontHeight(int height);
+
+    // MSW-specific: get the height value in pixels using LOGFONT convention
+    // (i.e. negative) corresponding to the given size in points and DPI.
+    static int GetLogFontHeightAtPPI(float size, int ppi)
+    {
+        return -wxRound(size * ppi / 72.0);
+    }
+
+    // And the same thing for the size of this font.
+    int GetLogFontHeightAtPPI(int ppi) const
+    {
+        return GetLogFontHeightAtPPI(pointSize, ppi);
+    }
 
     LOGFONT      lf;
 
@@ -148,18 +168,18 @@ public:
 
     void Free();
 
-    wxString GetFamilyName() const;
-    wxString GetStyleName() const;
-
-    static void UpdateNamesMap(const wxString& familyname, CTFontDescriptorRef descr);
-    static void UpdateNamesMap(const wxString& familyname, CTFontRef font);
+    // not all style attributes like condensed etc, are exposed in the public API methods
+    // for best fidelity PostScript names are useful, they are also used in the toString/fromString methods
+    wxString GetPostScriptName() const;
+    bool SetPostScriptName(const wxString& postScriptName);
 
     static CGFloat GetCTWeight( CTFontRef font );
     static CGFloat GetCTWeight( CTFontDescriptorRef font );
     static CGFloat GetCTSlant( CTFontDescriptorRef font );
 
-
     CTFontDescriptorRef GetCTFontDescriptor() const;
+    
+    void RealizeResource() const;
 private:
     // attributes for regenerating a CTFontDescriptor, stay close to native values
     // for better roundtrip fidelity
@@ -168,8 +188,8 @@ private:
     CGFloat       m_ctSize;
     wxFontFamily  m_family;
 
-    wxString      m_styleName;
     wxString      m_familyName;
+    wxString      m_postScriptName;
 
     // native font description
     wxCFRef<CTFontDescriptorRef> m_descriptor;

@@ -596,7 +596,10 @@ void wxListBox::SetHorizontalExtent(const wxString& s)
     }
 
     if ( largestExtent )
+    {
+        largestExtent = MSWGetFullItemSize(largestExtent, 0 /* height */).x;
         SendMessage(GetHwnd(), LB_SETHORIZONTALEXTENT, LOWORD(largestExtent), 0L);
+    }
     //else: it shouldn't change
 }
 
@@ -622,7 +625,7 @@ wxSize wxListBox::DoGetBestClientSize() const
     wListbox += 3*GetCharWidth();
 
     // add room for the scrollbar
-    wListbox += wxSystemSettings::GetMetric(wxSYS_VSCROLL_X);
+    wListbox += wxSystemSettings::GetMetric(wxSYS_VSCROLL_X, m_parent);
 
     // don't make the listbox too tall (limit height to 10 items) but don't
     // make it too small neither

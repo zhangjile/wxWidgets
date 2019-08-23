@@ -1674,7 +1674,7 @@ void wxAuiManager::GetPanePositionsAndSizes(wxAuiDockInfo& dock,
     positions.Empty();
     sizes.Empty();
 
-    int offset, action_pane = -1;
+    int action_pane = -1;
     int pane_i, pane_count = dock.panes.GetCount();
 
     // find the pane marked as our action pane
@@ -1737,7 +1737,7 @@ void wxAuiManager::GetPanePositionsAndSizes(wxAuiDockInfo& dock,
 
     // if the dock mode is fixed, make sure none of the panes
     // overlap; we will bump panes that overlap
-    offset = 0;
+    int offset = 0;
     for (pane_i = action_pane; pane_i < pane_count; ++pane_i)
     {
         int amount = positions[pane_i] - offset;
@@ -1917,7 +1917,7 @@ void wxAuiManager::LayoutAddPane(wxSizer* cont,
     }
     else
     {
-        sizer_item = cont->Add(horz_pane_sizer, pane_proportion, wxEXPAND);
+        cont->Add(horz_pane_sizer, pane_proportion, wxEXPAND);
     }
 }
 
@@ -4589,8 +4589,8 @@ void wxAuiManager::OnMotion(wxMouseEvent& event)
     }
     else if (m_action == actionClickCaption)
     {
-        int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
-        int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
+        int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X, m_frame);
+        int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y, m_frame);
 
         // caption has been clicked.  we need to check if the mouse
         // is now being dragged. if it is, we need to change the

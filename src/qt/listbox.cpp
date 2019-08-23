@@ -88,10 +88,9 @@ bool wxListBox::Create(wxWindow *parent, wxWindowID id,
 {
     DoCreate(parent, style);
 
-    QListWidgetItem* item;
-
     while ( n-- > 0 )
     {
+        QListWidgetItem* item;
         item = new QListWidgetItem();
         item->setText(wxQtConvertString( *choices++ ));
         if ( m_hasCheckBoxes )
@@ -147,7 +146,7 @@ void wxListBox::DoCreate(wxWindow* parent, long style)
     }
     else if ( style & wxLB_EXTENDED )
     {
-        wxMISSING_IMPLEMENTATION( wxSTRINGIZE( wxLB_EXTENDED ));
+        m_qtListWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     }
 }
 

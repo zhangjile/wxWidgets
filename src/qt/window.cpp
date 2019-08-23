@@ -347,8 +347,8 @@ void wxWindowQt::PostCreation(bool generic)
 //
 
     // Set the default color so Paint Event default handler clears the DC:
-    SetBackgroundColour(wxColour(GetHandle()->palette().background().color()));
-    SetForegroundColour(wxColour(GetHandle()->palette().foreground().color()));
+    wxWindowBase::SetBackgroundColour(wxColour(GetHandle()->palette().background().color()));
+    wxWindowBase::SetForegroundColour(wxColour(GetHandle()->palette().foreground().color()));
 
     GetHandle()->setFont( wxWindowBase::GetFont().GetHandle() );
 
@@ -1078,6 +1078,42 @@ bool wxWindowQt::SetTransparent(wxByte alpha)
 }
 
 
+namespace
+{
+
+void wxQtChangeRoleColour(QPalette::ColorRole role,
+                          QWidget* widget,
+                          const wxColour& colour)
+{
+    QPalette palette = widget->palette();
+    palette.setColor(role, colour.GetQColor());
+    widget->setPalette(palette);
+}
+
+} // anonymous namespace
+
+bool wxWindowQt::SetBackgroundColour(const wxColour& colour)
+{
+    if ( !wxWindowBase::SetBackgroundColour(colour) )
+        return false;
+
+    QWidget *widget = GetHandle();
+    wxQtChangeRoleColour(widget->backgroundRole(), widget, colour);
+
+    return true;
+}
+
+bool wxWindowQt::SetForegroundColour(const wxColour& colour)
+{
+    if (!wxWindowBase::SetForegroundColour(colour))
+        return false;
+
+    QWidget *widget = GetHandle();
+    wxQtChangeRoleColour(widget->foregroundRole(), widget, colour);
+
+    return true;
+}
+
 bool wxWindowQt::QtHandlePaintEvent ( QWidget *handler, QPaintEvent *event )
 {
     /* If this window has scrollbars, only let wx handle the event if it is
@@ -1423,7 +1459,6 @@ bool wxWindowQt::QtHandleMouseEvent ( QWidget *handler, QMouseEvent *event )
                 e.SetEventType( wxEVT_LEAVE_WINDOW );
 
             ProcessWindowEvent( e );
-            m_mouseInside = mouseInside;
         }
     }
 

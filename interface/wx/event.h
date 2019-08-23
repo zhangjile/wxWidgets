@@ -3291,7 +3291,25 @@ public:
     wxMouseCaptureLostEvent(wxWindowID windowId = 0);
 };
 
+/**
+    @class wxDisplayChangedEvent
 
+    A display changed event is sent to top-level windows when the display resolution has changed.
+    
+    This event is currently emitted under Windows only.
+
+    @beginEventTable{wxDisplayChangedEvent}
+    @event{EVT_DISPLAY_CHANGED(func)}
+        Process a @c wxEVT_DISPLAY_CHANGED event.
+    @endEventTable
+
+    @onlyfor{wxmsw}
+
+    @library{wxcore}
+    @category{events}
+
+    @see wxDisplay
+*/ 
 
 class wxDisplayChangedEvent : public wxEvent
 {
@@ -4431,8 +4449,9 @@ public:
 
         This method can only be used with the @c OPEN and @c CLOSE events.
 
-        The returned value is never @NULL in the ports implementing this
-        function, which currently includes all the major ones.
+        Note that the returned value can be @NULL if the menu being opened
+        doesn't have a corresponding wxMenu, e.g. this happens when opening the
+        system menu in wxMSW port.
     */
     wxMenu* GetMenu() const;
 
@@ -4781,7 +4800,7 @@ wxEventType wxNewEventType();
 
     This is mostly used by wxWidgets internally, e.g.
     @code
-    wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_BUTTON, wxCommandEvent)
+    wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_BUTTON, wxCommandEvent);
     @endcode
  */
 #define wxDECLARE_EXPORTED_EVENT( expdecl, name, cls ) \
