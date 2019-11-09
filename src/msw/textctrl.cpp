@@ -47,6 +47,7 @@
 
 #if wxUSE_CLIPBOARD
     #include "wx/clipbrd.h"
+    #include "wx/dataobj.h"
 #endif
 
 #include "wx/textfile.h"
@@ -2048,6 +2049,7 @@ bool wxTextCtrl::MSWShouldPreProcessMessage(WXMSG* msg)
                     {
                         switch ( vkey )
                         {
+                            case 'A':
                             case 'C':
                             case 'V':
                             case 'X':
@@ -2075,14 +2077,19 @@ void wxTextCtrl::OnChar(wxKeyEvent& event)
     switch ( event.GetKeyCode() )
     {
         case WXK_RETURN:
+        case WXK_NUMPAD_ENTER:
+            // Single line controls only get this key code if they have
+            // wxTE_PROCESS_ENTER style, but multiline ones always get it
+            // because they need it for themselves. However we shouldn't
+            // generate wxEVT_TEXT_ENTER for the controls without this style,
+            // so test for it explicitly.
+            if ( HasFlag(wxTE_PROCESS_ENTER) )
             {
                 wxCommandEvent evt(wxEVT_TEXT_ENTER, m_windowId);
                 InitCommandEvent(evt);
                 evt.SetString(GetValue());
                 if ( HandleWindowEvent(evt) )
-                    if ( !HasFlag(wxTE_MULTILINE) )
-                        return;
-                    //else: multiline controls need Enter for themselves
+                    return;
             }
             break;
 
@@ -2148,21 +2155,37 @@ void wxTextCtrl::OnKeyDown(wxKeyEvent& event)
     // from working. So we work around it by intercepting these shortcuts
     // ourselves and emitting clipboard events (which richedit will handle,
     // so everything works as before, including pasting of rich text):
-    if ( event.GetModifiers() == wxMOD_CONTROL && IsRich() )
+    if ( IsRich() )
     {
-        switch ( event.GetKeyCode() )
+        if ( event.GetModifiers() == wxMOD_CONTROL )
         {
-            case 'C':
-                Copy();
-                return;
-            case 'X':
-                Cut();
-                return;
-            case 'V':
-                Paste();
-                return;
-            default:
-                break;
+            switch ( event.GetKeyCode() )
+            {
+                case 'C':
+                case WXK_INSERT:
+                    Copy();
+                    return;
+                case 'X':
+                    Cut();
+                    return;
+                case 'V':
+                    Paste();
+                    return;
+                default:
+                    break;
+            }
+        }
+        else if ( event.GetModifiers() == wxMOD_SHIFT )
+        {
+            switch ( event.GetKeyCode() )
+            {
+                case WXK_INSERT:
+                    Paste();
+                    return;
+                case WXK_DELETE:
+                    Cut();
+                    return;
+            }
         }
     }
 
@@ -2191,6 +2214,24 @@ void wxTextCtrl::OnKeyDown(wxKeyEvent& event)
     event.Skip();
 }
 
+void wxTextCtrl::Paste()
+{
+    // Before pasting, check that the pasted text will fit, unless an explicit
+    // maximum length was set, to avoid only pasting some part of it.
+    //
+    // Note that rich text controls do not send WM_PASTE, so we can't do it in
+    // response to it, but we could handle EN_PROTECTED (after requesting it by
+    // specifying ENM_PROTECTED in EM_SETEVENTMASK argument) and check for the
+    // message being WM_PASTE there, but this doesn't seem to be better than
+    // the simpler approach used here.
+    if ( IsRich() )
+    {
+        AdjustMaxLengthBeforePaste();
+    }
+
+    wxTextCtrlBase::Paste();
+}
+
 bool
 wxTextCtrl::MSWHandleMessage(WXLRESULT *rc,
                              WXUINT nMsg,
@@ -2212,7 +2253,7 @@ wxTextCtrl::MSWHandleMessage(WXLRESULT *rc,
             // Fix these problems by explicitly performing the default function of this
             // key (which would be done by MSWProcessMessage() if we didn't have
             // wxTE_PROCESS_ENTER) and preventing the default WndProc from getting it.
-            if ( !processed && wParam == VK_RETURN )
+            if ( !processed && wParam == VK_RETURN && IsSingleLine() )
             {
                 if ( ClickDefaultButtonIfPossible() )
                     processed = true;
@@ -2294,7 +2335,14 @@ wxTextCtrl::MSWHandleMessage(WXLRESULT *rc,
                         ::IsMenu(GetHmenuOf(wxCurrentPopupMenu)) )
                     ::SetCursor(GetHcursorOf(*wxSTANDARD_CURSOR));
             }
+            break;
 #endif // wxUSE_MENUS
+
+        case WM_PASTE:
+            // Note that we get this message for plain EDIT controls only, rich
+            // controls are dealt with in our own Paste().
+            AdjustMaxLengthBeforePaste();
+            break;
     }
 
     return processed;
@@ -2431,6 +2479,48 @@ bool wxTextCtrl::AdjustSpaceLimit()
 
     // we changed the limit
     return true;
+}
+
+void wxTextCtrl::AdjustMaxLengthBeforePaste()
+{
+#if wxUSE_CLIPBOARD
+    // We only need to do this for multi line controls, single lines should
+    // never receive more text than fits into them by default anyhow.
+    if ( IsSingleLine() )
+        return;
+
+    // Also don't override an explicitly set limit.
+    unsigned int limit;
+    if ( HasSpaceLimit(&limit) )
+        return;
+
+    // Otherwise check if we have enough space for clipboard data. We only do
+    // it for plain text because this is all we know how to handle here.
+    wxClipboardLocker lock;
+    wxTextDataObject textData;
+    if ( !wxTheClipboard->GetData(textData) )
+        return;
+
+    // Unfortunately we can't just get the length directly because we need to
+    // convert EOLs, otherwise our calculation of the required length could be
+    // way off when there are many lines.
+    const unsigned long lenPasted =
+         wxTextFile::Translate(textData.GetText(), wxTextFileType_Dos).length();
+
+    long from, to;
+    GetSelection(&from, &to);
+    const unsigned long lenSel = to - from;
+
+    const unsigned long lenCurrent = GetLastPosition();
+
+    // We need enough space for all the current text and all the new
+    // text, but the selection will be replaced.
+    const unsigned long lenNeeded = lenCurrent - lenSel + lenPasted;
+    if ( lenNeeded >= limit )
+    {
+        SetMaxLength(lenNeeded);
+    }
+#endif // wxUSE_CLIPBOARD
 }
 
 bool wxTextCtrl::AcceptsFocusFromKeyboard() const
@@ -2626,6 +2716,16 @@ wxMenu *wxTextCtrl::MSWCreateContextMenu()
     m->AppendSeparator();
     m->Append(wxID_SELECTALL, _("Select &All"));
     return m;
+}
+
+void wxTextCtrl::MSWUpdateFontOnDPIChange(const wxSize& newDPI)
+{
+    // Don't do anything for the rich edit controls, they (somehow?) update
+    // their appearance on their own and changing their HFONT, as the base
+    // class version does, would reset all the styles used by them when the DPI
+    // changes, which is unwanted.
+    if ( !IsRich() )
+        wxTextCtrlBase::MSWUpdateFontOnDPIChange(newDPI);
 }
 
 // ----------------------------------------------------------------------------
@@ -3207,7 +3307,8 @@ bool wxTextCtrl::GetStyle(long position, wxTextAttr& style)
     // CHARFORMAT stores it to pixel-based units used by LOGFONT.
     // Note that RichEdit seems to always use standard DPI of 96, even when the
     // window is a monitor using a higher DPI.
-    lf.lfHeight = wxNativeFontInfo::GetLogFontHeightAtPPI(cf.yHeight/20.0f, 96);
+    lf.lfHeight = wxNativeFontInfo::GetLogFontHeightAtPPI(cf.yHeight/20.0f,
+                                                          GetDPI().y);
     lf.lfWidth = 0;
     lf.lfCharSet = ANSI_CHARSET; // FIXME: how to get correct charset?
     lf.lfClipPrecision = 0;
@@ -3240,7 +3341,7 @@ bool wxTextCtrl::GetStyle(long position, wxTextAttr& style)
     else
         lf.lfWeight = FW_NORMAL;
 
-    wxFont font(lf);
+    wxFont font(wxNativeFontInfo(lf, this));
     if (font.IsOk())
     {
         style.SetFont(font);

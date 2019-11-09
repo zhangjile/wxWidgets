@@ -2201,7 +2201,7 @@ enum wxGridRenderStyle
 
     @see @ref overview_grid, wxGridUpdateLocker
 */
-class wxGrid : public wxScrolledWindow
+class wxGrid : public wxScrolledCanvas
 {
 public:
 
@@ -2866,8 +2866,14 @@ public:
     /**
         Enables or disables in-place editing of grid cell data.
 
-        The grid will issue either a @c wxEVT_GRID_EDITOR_SHOWN or
-        @c wxEVT_GRID_EDITOR_HIDDEN event.
+        Enabling in-place editing generates @c wxEVT_GRID_EDITOR_SHOWN and, if
+        it isn't vetoed by the application, shows the in-place editor which
+        allows the user to change the cell value.
+
+        Disabling in-place editing does nothing if the in-place editor isn't
+        currently show, otherwise the @c wxEVT_GRID_EDITOR_HIDDEN event is
+        generated but, unlike the "shown" event, it can't be vetoed and the
+        in-place editor is dismissed unconditionally.
     */
     void EnableCellEditControl(bool enable = true);
 
@@ -3249,7 +3255,11 @@ public:
     void SetReadOnly(int row, int col, bool isReadOnly = true);
 
     /**
-        Displays the in-place cell edit control for the current cell.
+        Displays the active in-place cell edit control for the current cell
+        after it was hidden.
+
+        Note that this method does @em not start editing the cell, this is only
+        done by EnableCellEditControl().
     */
     void ShowCellEditControl();
 
@@ -3708,6 +3718,13 @@ public:
     bool CanDragRowSize(int row) const;
 
     /**
+        Returns @true if columns can be hidden from the popup menu of the native header.
+
+        @since 3.1.3
+    */
+    bool CanHideColumns() const;
+
+    /**
         Disable interactive resizing of the specified column.
 
         This method allows one to disable resizing of an individual column in a
@@ -3766,6 +3783,15 @@ public:
     void DisableDragRowSize();
 
     /**
+        Disables column hiding from the header popup menu.
+
+        Equivalent to passing @false to EnableHidingColumns().
+
+        @since 3.1.3
+    */
+    void DisableHidingColumns();
+
+    /**
         Enables or disables cell dragging with the mouse.
     */
     void EnableDragCell(bool enable = true);
@@ -3800,6 +3826,28 @@ public:
         @see DisableRowResize()
     */
     void EnableDragRowSize(bool enable = true);
+
+    /**
+        Enables or disables column hiding from the header popup menu.
+
+        Note that currently the popup menu can only be shown when using
+        wxHeaderCtrl, i.e. if UseNativeColHeader() had been called.
+
+        If the native header is not used, this method always simply returns
+        @false without doing anything, as hiding columns is not supported
+        anyhow. If @a enable value is the same as CanHideColumns(), it also
+        returns @false to indicate that nothing was done. Otherwise, it returns
+        @true to indicate that the value of this option was successfully
+        changed.
+
+        The main use case for this method is to disallow hiding the columns
+        interactively when using the native header.
+
+        @since 3.1.3
+
+        @see DisableHidingColumns()
+    */
+    bool EnableHidingColumns(bool enable = true);
 
     /**
         Returns the column ID of the specified column position.
@@ -4327,7 +4375,7 @@ public:
     wxGridWindow* CellToGridWindow( int row, int col ) const;
 
     /// @overload
-    wxGridWindow* CellToGridWindow( const wxGridCellCoords& coords ) const
+    wxGridWindow* CellToGridWindow( const wxGridCellCoords& coords ) const;
 
     /**
         Returns the grid window that includes the input coordinates.

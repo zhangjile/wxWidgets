@@ -140,6 +140,7 @@ protected:
     };
 
     void DrawTestLines( int x, int y, int width, wxDC &dc );
+    void DrawCrossHair(int x, int y, int width, int heigth, wxDC &dc);
     void DrawTestPoly(wxDC& dc);
     void DrawTestBrushes(wxDC& dc);
     void DrawText(wxDC& dc);
@@ -523,7 +524,7 @@ wxEND_EVENT_TABLE()
 
 MyCanvas::MyCanvas(MyFrame *parent)
         : wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                           wxHSCROLL | wxVSCROLL | wxNO_FULL_REPAINT_ON_RESIZE)
+                           wxHSCROLL | wxVSCROLL)
 {
     m_owner = parent;
     m_show = File_ShowDefault;
@@ -700,6 +701,15 @@ void MyCanvas::DrawTestLines( int x, int y, int width, wxDC &dc )
     dc.SetPen(penWithCap);
     dc.DrawText("Projecting cap", x+270, y+100);
     dc.DrawLine( x+200, y+110, x+250, y+110);
+}
+
+void MyCanvas::DrawCrossHair(int x, int y, int width, int heigth, wxDC &dc)
+{
+    dc.DrawText("Cross hair", x + 10, y + 10);
+    dc.SetClippingRegion(x, y, width, heigth);
+    dc.SetPen(wxPen(*wxBLUE, 2));
+    dc.CrossHair(x + width / 2, y + heigth / 2);
+    dc.DestroyClippingRegion();
 }
 
 void MyCanvas::DrawDefault(wxDC& dc)
@@ -1638,6 +1648,29 @@ void MyCanvas::DrawGradients(wxDC& dc)
         pth.GetBox(&boxX, &boxY, &boxWidth, &boxHeight);
         dc.CalcBoundingBox(wxRound(boxX), wxRound(boxY));
         dc.CalcBoundingBox(wxRound(boxX+boxWidth), wxRound(boxY+boxHeight));
+
+        gfr.Offset(0, gfr.height + 10);
+        dc.DrawText("Stroked path with a gradient pen", gfr.x, gfr.y);
+        gfr.Offset(0, TEXT_HEIGHT);
+
+        pth = gc->CreatePath();
+        pth.MoveToPoint(gfr.x + gfr.width/2, gfr.y);
+        pth.AddLineToPoint(gfr.x + gfr.width, gfr.y + gfr.height/2);
+        pth.AddLineToPoint(gfr.x + gfr.width/2, gfr.y + gfr.height);
+        pth.AddLineToPoint(gfr.x, gfr.y + gfr.height/2);
+        pth.CloseSubpath();
+
+        stops = wxGraphicsGradientStops(*wxRED, *wxBLUE);
+        stops.Add(wxColour(255,255,0), 0.33f);
+        stops.Add(*wxGREEN, 0.67f);
+
+        wxGraphicsPen pen = gc->CreatePen(
+            wxGraphicsPenInfo(wxColour(0,0,0)).Width(6).Join(wxJOIN_BEVEL).LinearGradient(
+                gfr.x + gfr.width/2, gfr.y, 
+                gfr.x + gfr.width/2, gfr.y + gfr.height,
+                stops));
+        gc->SetPen(pen);
+        gc->StrokePath(pth);
     }
 #endif // wxUSE_GRAPHICS_CONTEXT
 }
@@ -1910,6 +1943,7 @@ void MyCanvas::Draw(wxDC& pdc)
             DrawTestLines( 0, 320, 1, dc );
             DrawTestLines( 0, 540, 2, dc );
             DrawTestLines( 0, 760, 6, dc );
+            DrawCrossHair( 0, 0, 400, 90, dc);
             break;
 
         case File_ShowBrushes:
@@ -2128,8 +2162,7 @@ wxEND_EVENT_TABLE()
 
 // frame constructor
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
-       : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size,
-                 wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
+       : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size)
 {
     // set the frame icon
     SetIcon(wxICON(sample));

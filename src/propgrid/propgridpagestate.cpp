@@ -718,7 +718,7 @@ wxPropertyGridPageState::HitTest( const wxPoint&pt ) const
 // -----------------------------------------------------------------------
 
 // Used by SetSplitterLeft() and DotFitColumns()
-int wxPropertyGridPageState::GetColumnFitWidth(wxClientDC& dc,
+int wxPropertyGridPageState::GetColumnFitWidth(const wxDC& dc,
                                            wxPGProperty* pwc,
                                            unsigned int col,
                                            bool subProps) const
@@ -762,7 +762,7 @@ int wxPropertyGridPageState::GetColumnFitWidth(wxClientDC& dc,
     return maxW;
 }
 
-int wxPropertyGridPageState::GetColumnFullWidth( wxClientDC &dc, wxPGProperty *p, unsigned int col )
+int wxPropertyGridPageState::GetColumnFullWidth(const wxDC& dc, wxPGProperty* p, unsigned int col)
 {
     if ( p->IsCategory() )
         return 0;
@@ -1839,11 +1839,11 @@ bool wxPropertyGridPageState::IsChildCategory(wxPGProperty* p,
 
 void wxPropertyGridPageState::DoDelete( wxPGProperty* item, bool doDelete )
 {
+    wxCHECK_RET(item != &m_regularArray && item != m_abcArray,
+        wxS("wxPropertyGrid: Do not attempt to remove the root item."));
+
     wxCHECK_RET( item->GetParent(),
         wxS("wxPropertyGrid: This property was already deleted.") );
-
-    wxCHECK_RET( item != &m_regularArray && item != m_abcArray,
-        wxS("wxPropertyGrid: Do not attempt to remove the root item.") );
 
     wxPGProperty* parent = item->GetParent();
 

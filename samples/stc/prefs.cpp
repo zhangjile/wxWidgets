@@ -220,157 +220,157 @@ const StyleInfo g_StylePrefs [] = {
     // mySTC_TYPE_DEFAULT
     {"Default",
      "BLACK", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_WORD1
     {"Keyword1",
      "BLUE", "WHITE",
-     "", 10, mySTC_STYLE_BOLD, 0},
+     "Ubuntu Mono", 10, mySTC_STYLE_BOLD, 0},
 
     // mySTC_TYPE_WORD2
     {"Keyword2",
      "MIDNIGHT BLUE", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_WORD3
     {"Keyword3",
      "CORNFLOWER BLUE", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_WORD4
     {"Keyword4",
      "CYAN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_WORD5
     {"Keyword5",
      "DARK GREY", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_WORD6
     {"Keyword6",
      "GREY", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_COMMENT
     {"Comment",
      "FOREST GREEN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_COMMENT_DOC
     {"Comment (Doc)",
      "FOREST GREEN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_COMMENT_LINE
     {"Comment line",
      "FOREST GREEN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_COMMENT_SPECIAL
     {"Special comment",
      "FOREST GREEN", "WHITE",
-     "", 10, mySTC_STYLE_ITALIC, 0},
+     "Ubuntu Mono", 10, mySTC_STYLE_ITALIC, 0},
 
     // mySTC_TYPE_CHARACTER
     {"Character",
      "KHAKI", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_CHARACTER_EOL
     {"Character (EOL)",
      "KHAKI", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_STRING
     {"String",
      "BROWN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_STRING_EOL
     {"String (EOL)",
      "BROWN", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_DELIMITER
     {"Delimiter",
      "ORANGE", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_PUNCTUATION
     {"Punctuation",
      "ORANGE", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_OPERATOR
     {"Operator",
      "BLACK", "WHITE",
-     "", 10, mySTC_STYLE_BOLD, 0},
+     "Ubuntu Mono", 10, mySTC_STYLE_BOLD, 0},
 
     // mySTC_TYPE_BRACE
     {"Label",
      "VIOLET", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_COMMAND
     {"Command",
      "BLUE", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_IDENTIFIER
     {"Identifier",
      "BLACK", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_LABEL
     {"Label",
      "VIOLET", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_NUMBER
     {"Number",
      "SIENNA", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_PARAMETER
     {"Parameter",
      "VIOLET", "WHITE",
-     "", 10, mySTC_STYLE_ITALIC, 0},
+     "Ubuntu Mono", 10, mySTC_STYLE_ITALIC, 0},
 
     // mySTC_TYPE_REGEX
     {"Regular expression",
      "ORCHID", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_UUID
     {"UUID",
      "ORCHID", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_VALUE
     {"Value",
      "ORCHID", "WHITE",
-     "", 10, mySTC_STYLE_ITALIC, 0},
+     "Ubuntu Mono", 10, mySTC_STYLE_ITALIC, 0},
 
     // mySTC_TYPE_PREPROCESSOR
     {"Preprocessor",
      "GREY", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_SCRIPT
     {"Script",
      "DARK GREY", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_ERROR
     {"Error",
      "RED", "WHITE",
-     "", 10, 0, 0},
+     "Ubuntu Mono", 10, 0, 0},
 
     // mySTC_TYPE_UNDEFINED
     {"Undefined",
      "ORANGE", "WHITE",
-     "", 10, 0, 0}
+     "Ubuntu Mono", 10, 0, 0}
 
     };
 

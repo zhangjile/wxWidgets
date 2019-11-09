@@ -78,8 +78,7 @@ public:
     virtual bool IsItemChecked(long item) const wxOVERRIDE;
 
 private:
-    void ShowContextMenu(const wxPoint& pos);
-    wxLog *m_logOld;
+    void ShowContextMenu(const wxPoint& pos, long item);
     void SetColumnImage(int col, int image);
 
     void LogEvent(const wxListEvent& event, const wxString& eventName);

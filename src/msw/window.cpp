@@ -577,7 +577,7 @@ void wxWindowMSW::SetId(wxWindowID winid)
 
 void wxWindowMSW::SetFocus()
 {
-    HWND hWnd = GetHwnd();
+    HWND hWnd = (HWND)MSWGetFocusHWND();
     wxCHECK_RET( hWnd, wxT("can't set focus to invalid window") );
 
     ::SetLastError(0);
@@ -599,13 +599,15 @@ void wxWindowMSW::SetFocus()
 
 void wxWindowMSW::SetFocusFromKbd()
 {
+    HWND hWnd = (HWND)MSWGetFocusHWND();
+
     // when the focus is given to the control with DLGC_HASSETSEL style from
     // keyboard its contents should be entirely selected: this is what
     // ::IsDialogMessage() does and so we should do it as well to provide the
     // same LNF as the native programs
-    if ( ::SendMessage(GetHwnd(), WM_GETDLGCODE, 0, 0) & DLGC_HASSETSEL )
+    if ( ::SendMessage(hWnd, WM_GETDLGCODE, 0, 0) & DLGC_HASSETSEL )
     {
-        ::SendMessage(GetHwnd(), EM_SETSEL, 0, -1);
+        ::SendMessage(hWnd, EM_SETSEL, 0, -1);
     }
 
     // do this after (maybe) setting the selection as like this when
@@ -1023,9 +1025,17 @@ void wxWindowMSW::MSWUpdateUIState(int action, int state)
 
 void wxWindowMSW::WXSetPendingFocus(wxWindow* win)
 {
+    wxWindow * const focus = FindFocus();
+
     for ( wxWindow* parent = this; parent; parent = parent->GetParent() )
     {
-        parent->WXDoUpdatePendingFocus(win);
+        // We shouldn't overwrite the pending focus if the window has the focus
+        // currently, as this would make its state inconsistent. And this would
+        // be useless anyhow, as we only remember pending focus in order to
+        // restore it properly when the window gets the focus back -- which is
+        // unnecessary if it has the focus already.
+        if ( !parent->IsDescendant(focus) )
+            parent->WXDoUpdatePendingFocus(win);
 
         if ( parent->IsTopLevel() )
             break;
@@ -2420,8 +2430,9 @@ wxWindowMSW::HandleMenuSelect(WXWORD nItem, WXWORD flags, WXHMENU hMenu)
     if ( flags & (MF_POPUP | MF_SEPARATOR) )
         item = wxID_NONE;
 
-    wxMenuEvent event(wxEVT_MENU_HIGHLIGHT, item);
-    if ( wxMenu::ProcessMenuEvent(MSWFindMenuFromHMENU(hMenu), event, this) )
+    wxMenu* menu = MSWFindMenuFromHMENU(hMenu);
+    wxMenuEvent event(wxEVT_MENU_HIGHLIGHT, item, menu);
+    if ( wxMenu::ProcessMenuEvent(menu, event, this) )
         return true;
 
     // by default, i.e. if the event wasn't handled above, clear the status bar
@@ -4829,12 +4840,100 @@ wxSize wxWindowMSW::GetDPI() const
 
     if ( !dpi.x || !dpi.y )
     {
-        WindowHDC hdc(GetHwnd());
+        WindowHDC hdc(hwnd);
         dpi.x = ::GetDeviceCaps(hdc, LOGPIXELSX);
         dpi.y = ::GetDeviceCaps(hdc, LOGPIXELSY);
     }
 
     return dpi;
+}
+
+void wxWindowMSW::MSWUpdateFontOnDPIChange(const wxSize& newDPI)
+{
+    if ( m_font.IsOk() )
+    {
+        m_font.WXAdjustToPPI(newDPI);
+
+        // WXAdjustToPPI() changes the HFONT, so reassociate it with the window.
+        wxSetWindowFont(GetHwnd(), m_font);
+    }
+}
+
+// Helper function to update the given coordinate by the scaling factor if it
+// is set, i.e. different from wxDefaultCoord.
+static void ScaleCoordIfSet(int& coord, float scaleFactor)
+{
+    if ( coord != wxDefaultCoord )
+    {
+        const float coordScaled = coord * scaleFactor;
+        coord = scaleFactor > 1.0 ? ceil(coordScaled) : floor(coordScaled);
+    }
+}
+
+void
+wxWindowMSW::MSWUpdateOnDPIChange(const wxSize& oldDPI, const wxSize& newDPI)
+{
+    // update min and max size if necessary
+    const float scaleFactor = (float)newDPI.y / oldDPI.y;
+
+    ScaleCoordIfSet(m_minHeight, scaleFactor);
+    ScaleCoordIfSet(m_minWidth, scaleFactor);
+    ScaleCoordIfSet(m_maxHeight, scaleFactor);
+    ScaleCoordIfSet(m_maxWidth, scaleFactor);
+
+    InvalidateBestSize();
+
+    // update font if necessary
+    MSWUpdateFontOnDPIChange(newDPI);
+
+    // update sizers
+    if ( GetSizer() )
+    {
+        for ( wxSizerItemList::compatibility_iterator
+              node = GetSizer()->GetChildren().GetFirst();
+              node;
+              node = node->GetNext() )
+        {
+            wxSizerItem* sizerItem = node->GetData();
+
+            int border = sizerItem->GetBorder();
+            ScaleCoordIfSet(border, scaleFactor);
+            sizerItem->SetBorder(border);
+
+            // only scale sizers and spacers, not windows
+            if ( sizerItem->IsSizer() || sizerItem->IsSpacer() )
+            {
+                wxSize min = sizerItem->GetMinSize();
+                ScaleCoordIfSet(min.x, scaleFactor);
+                ScaleCoordIfSet(min.y, scaleFactor);
+                sizerItem->SetMinSize(min);
+
+                wxSize size = sizerItem->GetSize();
+                ScaleCoordIfSet(size.x, scaleFactor);
+                ScaleCoordIfSet(size.y, scaleFactor);
+                sizerItem->SetDimension(wxDefaultPosition, size);
+            }
+        }
+    }
+
+    // update children
+    for ( wxWindowList::compatibility_iterator node = GetChildren().GetFirst();
+          node;
+          node = node->GetNext() )
+    {
+        wxWindow *childWin = node->GetData();
+        // Update all children, except other top-level windows.
+        // These could be on a different monitor and will get their own
+        // dpi-changed event.
+        if ( childWin && !childWin->IsTopLevel() )
+        {
+            childWin->MSWUpdateOnDPIChange(oldDPI, newDPI);
+        }
+    }
+
+    wxDPIChangedEvent event(oldDPI, newDPI);
+    event.SetEventObject(this);
+    HandleWindowEvent(event);
 }
 
 // ---------------------------------------------------------------------------

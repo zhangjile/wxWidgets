@@ -160,7 +160,7 @@ Edit::Edit (wxWindow *parent, wxWindowID id,
     SetReadOnly (g_CommonPrefs.readOnlyInitial);
     SetWrapMode (g_CommonPrefs.wrapModeInitial?
                  wxSTC_WRAP_WORD: wxSTC_WRAP_NONE);
-    wxFont font(wxFontInfo(10).Family(wxFONTFAMILY_MODERN));
+    wxFont font(wxFontInfo(12).Family(wxFONTFAMILY_MODERN));
     StyleSetFont (wxSTC_STYLE_DEFAULT, font);
     StyleSetForeground (wxSTC_STYLE_DEFAULT, *wxBLACK);
     StyleSetBackground (wxSTC_STYLE_DEFAULT, *wxWHITE);
@@ -609,7 +609,7 @@ bool Edit::InitializePrefs (const wxString &name) {
     // default fonts for all styles!
     int Nr;
     for (Nr = 0; Nr < wxSTC_STYLE_LASTPREDEFINED; Nr++) {
-        wxFont font(wxFontInfo(10).Family(wxFONTFAMILY_MODERN));
+        wxFont font(wxFontInfo(10).Family(wxFONTFAMILY_MODERN).FaceName("Ubuntu Mono"));
         StyleSetFont (Nr, font);
     }
 

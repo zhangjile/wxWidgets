@@ -635,16 +635,6 @@ public:
     void SetCol( int n ) { m_col = n; }
     void Set( int row, int col ) { m_row = row; m_col = col; }
 
-    wxGridCellCoords& operator=( const wxGridCellCoords& other )
-    {
-        if ( &other != this )
-        {
-            m_row=other.m_row;
-            m_col=other.m_col;
-        }
-        return *this;
-    }
-
     bool operator==( const wxGridCellCoords& other ) const
     {
         return (m_row == other.m_row  &&  m_col == other.m_col);
@@ -946,7 +936,7 @@ struct WXDLLIMPEXP_CORE wxGridSizesInfo
 // wxGrid
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxGrid : public wxScrolledWindow
+class WXDLLIMPEXP_CORE wxGrid : public wxScrolledCanvas
 {
 public:
     // possible selection modes
@@ -1131,6 +1121,8 @@ public:
                          const wxArrayString& lines,
                          long *width, long *height ) const;
 
+    // If bottomRight is invalid, i.e. == wxGridNoCellCoords, it defaults to
+    // topLeft. If topLeft itself is invalid, the function simply returns.
     void RefreshBlock(const wxGridCellCoords& topLeft,
                       const wxGridCellCoords& bottomRight);
 
@@ -1357,6 +1349,11 @@ public:
     void     DisableDragColMove() { EnableDragColMove( false ); }
     bool     CanDragColMove() const { return m_canDragColMove; }
 
+    // interactive column hiding (enabled by default, works only for native header)
+    bool     EnableHidingColumns( bool enable = true );
+    void     DisableHidingColumns() { EnableHidingColumns(false); }
+    bool     CanHideColumns() const { return m_canHideColumns; }
+
     // interactive resizing of grid cells (enabled by default)
     void     EnableDragGridSize(bool enable = true);
     void     DisableDragGridSize() { EnableDragGridSize(false); }
@@ -1522,6 +1519,8 @@ public:
     // reverse mapping currently
     int GetColPos(int idx) const
     {
+        wxASSERT_MSG( idx >= 0 && idx < m_numCols, "invalid column index" );
+
         if ( m_colAt.IsEmpty() )
             return idx;
 
@@ -1938,16 +1937,15 @@ public:
 
 
     // override some base class functions
-    virtual bool Enable(bool enable = true) wxOVERRIDE;
-    virtual wxWindow *GetMainWindowOfCompositeControl() wxOVERRIDE
-        { return (wxWindow*)m_gridWin; }
     virtual void Fit() wxOVERRIDE;
+    virtual void SetFocus() wxOVERRIDE;
 
     // implementation only
     void CancelMouseCapture();
 
 protected:
     virtual wxSize DoGetBestSize() const wxOVERRIDE;
+    virtual void DoEnable(bool enable) wxOVERRIDE;
 
     bool m_created;
 
@@ -2168,6 +2166,7 @@ protected:
     bool    m_canDragRowSize;
     bool    m_canDragColSize;
     bool    m_canDragColMove;
+    bool    m_canHideColumns;
     bool    m_canDragGridSize;
     bool    m_canDragCell;
 
@@ -2272,11 +2271,12 @@ protected:
     friend class wxGridWindow;
     friend class wxGridHeaderRenderer;
 
+    friend class wxGridHeaderColumn;
     friend class wxGridHeaderCtrl;
 
 private:
 
-    // implement wxScrolledWindow method to return m_gridWin size
+    // implement wxScrolledCanvas method to return m_gridWin size
     virtual wxSize GetSizeAvailableForScrollTarget(const wxSize& size) wxOVERRIDE;
 
     // depending on the values of m_numFrozenRows and m_numFrozenCols, it will
@@ -2304,6 +2304,10 @@ private:
 
     // common part of Clip{Horz,Vert}GridLines
     void DoClipGridLines(bool& var, bool clip);
+
+    // Redimension() helper: update m_currentCellCoords if necessary after a
+    // grid size change
+    void UpdateCurrentCellOnRedim();
 
     // update the sorting indicator shown in the specified column (whose index
     // must be valid)
@@ -2389,6 +2393,8 @@ private:
     void ProcessColLabelMouseEvent(wxMouseEvent& event,
                                    wxGridColLabelWindow* colLabelWin);
     void ProcessCornerLabelMouseEvent(wxMouseEvent& event);
+
+    void HandleColumnAutosize(int col, const wxMouseEvent& event);
 
     void DoColHeaderClick(int col);
 
@@ -2477,6 +2483,10 @@ private:
     // the second one, so it's never necessary to call both of them.
     void SetNativeHeaderColCount();
     void SetNativeHeaderColOrder();
+
+    // Unlike the public SaveEditControlValue(), this method doesn't check if
+    // the edit control is shown, but just supposes that it is.
+    void DoSaveEditControlValue();
 
     // these sets contain the indices of fixed, i.e. non-resizable
     // interactively, grid rows or columns and are NULL if there are no fixed
